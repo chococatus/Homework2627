@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korean Homework</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Subtle class header — stays out of the way -->
+  <header class="site-header">
+    <p class="site-header__org">USBKS</p>
+    <p class="site-header__class">Kkoekkori Class (꾀꼬리반)</p>
+  </header>
+
+  <main class="page">
+
+    <!-- First visit: pick a student card -->
+    <section id="selection-view" class="view" hidden>
+      <h1 class="view-title">Who are you?</h1>
+      <div id="student-grid" class="student-grid"></div>
+      <button id="start-button" class="btn btn--primary" type="button" disabled>
+        Start Homework
+      </button>
+    </section>
+
+    <!-- Return visit: welcome back the saved student -->
+    <section id="welcome-view" class="view" hidden>
+      <h1 class="view-title">Welcome back!</h1>
+      <div id="welcome-student" class="welcome-student"></div>
+      <button id="welcome-start-button" class="btn btn--primary" type="button">
+        Start Homework
+      </button>
+      <button id="change-student-button" class="btn btn--secondary" type="button">
+        Change Student
+      </button>
+    </section>
+
+    <!-- Home screen: progress, homework list, main action -->
+    <section id="home-view" class="view" hidden>
+      <div id="home-student" class="home-student"></div>
+
+      <div class="progress-section">
+        <div id="stars-row" class="stars-row"></div>
+        <p id="stars-count" class="stars-count"></p>
+      </div>
+
+      <button id="start-week-button" class="btn btn--primary" type="button">
+        Start This Week's Homework
+      </button>
+
+      <ul id="homework-list" class="homework-list"></ul>
+
+      <button id="home-change-student-button" class="btn btn--secondary" type="button">
+        Change Student
+      </button>
+    </section>
+
+    <!-- Temporary placeholder until real homework pages are built -->
+    <section id="placeholder-view" class="view" hidden>
+      <h1 class="view-title">This Week's Homework</h1>
+      <p class="placeholder-message">Homework coming soon!</p>
+      <button id="placeholder-back-button" class="btn btn--secondary" type="button">
+        Back to Home
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Data sources (will be replaced by Google Sheets) -->
+  <script src="students.js"></script>
+  <script src="homework.js"></script>
+  <script src="progress.js"></script>
+  <script src="storage.js"></script>
+
+  <!-- Shared UI helpers and views -->
+  <script src="ui-shapes.js"></script>
+  <script src="selection-view.js"></script>
+  <script src="welcome-view.js"></script>
+  <script src="home-view.js"></script>
+  <script src="placeholder-view.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -72,8 +72,12 @@ const SelectionView = (function () {
     onStartCallback = onStart;
 
     startBtn.addEventListener("click", function () {
-      if (selectedStudentId && onStartCallback) {
-        onStartCallback(selectedStudentId);
+      const studentId = selectedStudentId || getSavedStudentId();
+      if (studentId) {
+        saveSelectedStudent(studentId);
+        if (onStartCallback) {
+          onStartCallback(studentId);
+        }
       }
     });
   }

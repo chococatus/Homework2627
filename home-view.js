@@ -11,11 +11,11 @@ const HomeView = (function () {
   const starsRowEl = document.getElementById("stars-row");
   const starsCountEl = document.getElementById("stars-count");
   const homeworkListEl = document.getElementById("homework-list");
-  const startWeekBtn = document.getElementById("start-week-button");
   const changeBtn = document.getElementById("home-change-student-button");
 
   let onStartWeekCallback = null;
   let onChangeStudentCallback = null;
+  let homeworkData = [];
 
   /** Map display status to the icon shown beside each homework row. */
   const STATUS_ICONS = {
@@ -50,7 +50,7 @@ const HomeView = (function () {
    * @param {object} homework — { week, title }
    * @param {string} displayStatus
    */
-  function createHomeworkItem(homework, displayStatus) {
+  function createHomeworkItem(homework, displayStatus, onClick) {
     const item = document.createElement("li");
     item.className = "homework-item homework-item--" + displayStatus;
 
@@ -67,9 +67,18 @@ const HomeView = (function () {
     title.className = "homework-item__title";
     title.textContent = homework.title;
 
+    
     item.appendChild(icon);
     item.appendChild(week);
     item.appendChild(title);
+    
+    item.style.cursor = "pointer";
+
+    item.addEventListener("click", function () {
+      if (onClick) {
+        onClick(homework);
+      }
+    });
 
     return item;
   }
@@ -81,9 +90,17 @@ const HomeView = (function () {
   function renderHomeworkList(studentId) {
     homeworkListEl.innerHTML = "";
 
-    getPublishedHomework().slice().reverse().forEach(function (homework) {
+    const items = getPublishedHomework()
+      .slice()
+      .reverse();
+
+    items.forEach(function (homework) {
       const status = getWeekProgress(studentId, homework.week);
-      homeworkListEl.appendChild(createHomeworkItem(homework, status));
+      homeworkListEl.appendChild(createHomeworkItem(homework, status, function () {
+        if (onStartWeekCallback) {
+          onStartWeekCallback(homework);
+        }
+      }));
     });
   }
 
@@ -103,7 +120,10 @@ const HomeView = (function () {
    * Populate the entire Home screen for a student.
    * @param {object} student
    */
+  let currentStudent = null;
+
   function render(student) {
+    currentStudent = student;
     renderStudent(student);
 
     const earned = getStarsEarnedWithFallback(student.id);
@@ -112,8 +132,33 @@ const HomeView = (function () {
   }
 
   function show(student) {
+    currentStudent = student;
     render(student);
     viewEl.hidden = false;
+  }
+
+  function loadHomeworkData() {
+    if (typeof getHomeworkList !== "function") {
+      return Promise.resolve();
+    }
+
+    homeworkData = getPublishedHomework();
+
+    return getHomeworkList()
+      .then(function (data) {
+        if (Array.isArray(data) && data.length > 0) {
+          homeworkData = data.filter(function (item) {
+            return item && item.published === true;
+          });
+        }
+
+        if (viewEl.hidden === false && currentStudent) {
+          render(currentStudent);
+        }
+      })
+      .catch(function (error) {
+        console.error("Failed to load homework data:", error);
+      });
   }
 
   function hide() {
@@ -124,17 +169,13 @@ const HomeView = (function () {
     onStartWeekCallback = onStartWeek;
     onChangeStudentCallback = onChangeStudent;
 
-    startWeekBtn.addEventListener("click", function () {
-      if (onStartWeekCallback) {
-        onStartWeekCallback();
-      }
-    });
-
     changeBtn.addEventListener("click", function () {
       if (onChangeStudentCallback) {
         onChangeStudentCallback();
       }
     });
+
+    loadHomeworkData();
   }
 
   return { show, hide, init };

@@ -29,6 +29,13 @@ function navigateToHome(studentId) {
 
   hideAllViews();
   HomeView.show(student);
+  HomeView.init(function () {
+    navigateToHomework({ week: 1, title: "Homework" });
+  }, navigateToSelection);
+
+  if (typeof loadHomeworkData === "function") {
+    loadHomeworkData();
+  }
 }
 
 function navigateToSelection() {
@@ -48,7 +55,7 @@ function navigateToWelcome(studentId) {
   WelcomeView.show(student);
 }
 
-function navigateToPlaceholder() {
+function navigateToHomework(homework) {
   hideAllViews();
   PlaceholderView.show();
 }
@@ -59,7 +66,7 @@ SelectionView.init(navigateToHome);
 
 WelcomeView.init(navigateToHome, navigateToSelection);
 
-HomeView.init(navigateToPlaceholder, navigateToSelection);
+HomeView.init(navigateToHomework, navigateToSelection);
 
 PlaceholderView.init(function () {
   const savedId = getSavedStudentId();
@@ -71,6 +78,30 @@ PlaceholderView.init(function () {
 });
 
 // --- App startup ---
+/*
+function init() {
+  const savedId = getSavedStudentId();
+  const savedStudent = savedId ? getStudentById(savedId) : null;
+
+  hideAllViews();
+
+  if (savedStudent) {
+    WelcomeView.show(savedStudent);
+  } else {
+    SelectionView.show();
+  }
+
+  if (typeof window.getHomeworkList === "function") {
+    window.getHomeworkList()
+      .then(function (data) {
+        console.log("Homework data loaded:", data);
+      })
+      .catch(function (error) {
+        console.error("Failed to load homework data:", error);
+      });
+  }
+}
+*/
 
 function init() {
   const savedId = getSavedStudentId();

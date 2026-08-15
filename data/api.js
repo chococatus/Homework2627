@@ -1,5 +1,5 @@
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbz32DBlM7OFn8aXbO1wwMv0vR3I90MEtCyAbP4OXgz93XSVna33N6N1zKhVbXWaAXDf/exec";
+  "https://script.google.com/macros/s/AKfycbydvgjibp1ZbUbJpUxAjGpO6unRKq2U-Tuhz4B1WNMtGDHfd0DbfcHI9DPQBbY0tGUw/exec";
 
 async function fetchJson(sheetName) {
   const url = sheetName

@@ -78,32 +78,10 @@ PlaceholderView.init(function () {
 });
 
 // --- App startup ---
-/*
-function init() {
-  const savedId = getSavedStudentId();
-  const savedStudent = savedId ? getStudentById(savedId) : null;
 
-  hideAllViews();
+async function init() {
+  await loadStudentsData();
 
-  if (savedStudent) {
-    WelcomeView.show(savedStudent);
-  } else {
-    SelectionView.show();
-  }
-
-  if (typeof window.getHomeworkList === "function") {
-    window.getHomeworkList()
-      .then(function (data) {
-        console.log("Homework data loaded:", data);
-      })
-      .catch(function (error) {
-        console.error("Failed to load homework data:", error);
-      });
-  }
-}
-*/
-
-function init() {
   const savedId = getSavedStudentId();
   const savedStudent = savedId ? getStudentById(savedId) : null;
 

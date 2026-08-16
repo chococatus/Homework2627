@@ -15,7 +15,6 @@ const HomeView = (function () {
 
   let onStartWeekCallback = null;
   let onChangeStudentCallback = null;
-  let homeworkData = [];
 
   /** Map display status to the icon shown beside each homework row. */
   const STATUS_ICONS = {
@@ -67,11 +66,10 @@ const HomeView = (function () {
     title.className = "homework-item__title";
     title.textContent = homework.title;
 
-    
     item.appendChild(icon);
     item.appendChild(week);
     item.appendChild(title);
-    
+
     item.style.cursor = "pointer";
 
     item.addEventListener("click", function () {
@@ -137,30 +135,6 @@ const HomeView = (function () {
     viewEl.hidden = false;
   }
 
-  function loadHomeworkData() {
-    if (typeof getHomeworkList !== "function") {
-      return Promise.resolve();
-    }
-
-    homeworkData = getPublishedHomework();
-
-    return getHomeworkList()
-      .then(function (data) {
-        if (Array.isArray(data) && data.length > 0) {
-          homeworkData = data.filter(function (item) {
-            return item && item.published === true;
-          });
-        }
-
-        if (viewEl.hidden === false && currentStudent) {
-          render(currentStudent);
-        }
-      })
-      .catch(function (error) {
-        console.error("Failed to load homework data:", error);
-      });
-  }
-
   function hide() {
     viewEl.hidden = true;
   }
@@ -175,7 +149,11 @@ const HomeView = (function () {
       }
     });
 
-    loadHomeworkData();
+    loadHomeworkData().then(function () {
+      if (viewEl.hidden === false && currentStudent) {
+        render(currentStudent);
+      }
+    });
   }
 
   return { show, hide, init };

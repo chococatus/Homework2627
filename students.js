@@ -12,11 +12,30 @@ async function loadStudentsData() {
     return studentLoadPromise;
   }
 
+  const startTime = performance.now();
+  console.log("[Student Load] started");
+
   studentLoadPromise = fetchJson("Students")
     .then(function (data) {
+      const fetchTime = performance.now();
+
+      console.log(
+        "[Student Load] API response:",
+        (fetchTime - startTime).toFixed(0) + " ms"
+      );
+
       if (Array.isArray(data)) {
         STUDENTS = data;
       }
+
+      const completeTime = performance.now();
+
+      console.log(
+        "[Student Load] complete:",
+        (completeTime - startTime).toFixed(0) + " ms",
+        "students:",
+        STUDENTS.length
+      );
     })
     .catch(function (error) {
       console.error("Failed to load student data:", error);

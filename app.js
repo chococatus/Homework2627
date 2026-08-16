@@ -29,13 +29,6 @@ function navigateToHome(studentId) {
 
   hideAllViews();
   HomeView.show(student);
-  HomeView.init(function () {
-    navigateToHomework({ week: 1, title: "Homework" });
-  }, navigateToSelection);
-
-  if (typeof loadHomeworkData === "function") {
-    loadHomeworkData();
-  }
 }
 
 function navigateToSelection() {

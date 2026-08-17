@@ -18,18 +18,20 @@ const PlaceholderView = (function () {
   let nextBtn = null;
 
   function ensureControls() {
+    titleEl.classList.add("study-week-label");
+    messageEl.classList.add("study-text");
+    backBtn.classList.add("study-nav-button");
+
     if (!imageEl) {
       imageEl = document.createElement("img");
+      imageEl.className = "study-image";
       imageEl.alt = "";
-      imageEl.style.maxWidth = "320px";
-      imageEl.style.maxHeight = "260px";
-      imageEl.style.marginBottom = "1.25rem";
       messageEl.insertAdjacentElement("beforebegin", imageEl);
     }
 
     if (!prevBtn) {
       prevBtn = document.createElement("button");
-      prevBtn.className = "btn btn--secondary";
+      prevBtn.className = "btn btn--secondary study-nav-button";
       prevBtn.type = "button";
       prevBtn.textContent = "Previous";
       backBtn.insertAdjacentElement("beforebegin", prevBtn);
@@ -44,7 +46,7 @@ const PlaceholderView = (function () {
 
     if (!nextBtn) {
       nextBtn = document.createElement("button");
-      nextBtn.className = "btn btn--primary";
+      nextBtn.className = "btn btn--primary study-nav-button";
       nextBtn.type = "button";
       nextBtn.textContent = "Next";
       backBtn.insertAdjacentElement("beforebegin", nextBtn);
@@ -74,7 +76,7 @@ const PlaceholderView = (function () {
     messageEl.textContent = item.text;
 
     if (item.image) {
-      imageEl.src = "assets/image/" + item.image;
+      imageEl.src = "assets/images/" + item.image;
       imageEl.alt = item.text;
       imageEl.hidden = false;
     } else {

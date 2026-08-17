@@ -17,6 +17,20 @@ const PlaceholderView = (function () {
   let imageRowEl = null;
   let prevBtn = null;
   let nextBtn = null;
+  let speakBtn = null;
+
+  function speakCurrentItem() {
+    if (items.length === 0 || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    const item = items[currentIndex];
+    const utterance = new SpeechSynthesisUtterance(item.text);
+    utterance.lang = "ko-KR";
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
 
   function ensureControls() {
     titleEl.classList.add("study-week-label");
@@ -67,6 +81,17 @@ const PlaceholderView = (function () {
         }
       });
     }
+
+    if (!speakBtn) {
+      speakBtn = document.createElement("button");
+      speakBtn.className = "study-speak-button";
+      speakBtn.type = "button";
+      speakBtn.textContent = "🔊 Listen";
+      speakBtn.setAttribute("aria-label", "Listen to this Korean text");
+      messageEl.insertAdjacentElement("afterend", speakBtn);
+
+      speakBtn.addEventListener("click", speakCurrentItem);
+    }
   }
 
   function renderCurrentItem() {
@@ -77,6 +102,7 @@ const PlaceholderView = (function () {
       imageEl.hidden = true;
       prevBtn.hidden = true;
       nextBtn.hidden = true;
+      speakBtn.hidden = true;
       return;
     }
 
@@ -94,6 +120,8 @@ const PlaceholderView = (function () {
 
     prevBtn.hidden = currentIndex === 0;
     nextBtn.hidden = currentIndex === items.length - 1;
+    speakBtn.hidden = false;
+    speakBtn.disabled = !("speechSynthesis" in window);
   }
 
   function show(homework, weekItems) {
@@ -105,6 +133,9 @@ const PlaceholderView = (function () {
   }
 
   function hide() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
     viewEl.hidden = true;
   }
 

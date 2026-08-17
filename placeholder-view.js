@@ -33,7 +33,7 @@ const PlaceholderView = (function () {
       prevBtn = document.createElement("button");
       prevBtn.className = "study-arrow";
       prevBtn.type = "button";
-      prevBtn.textContent = "←";
+      prevBtn.textContent = "<";
       prevBtn.setAttribute("aria-label", "Previous item");
       imageRowEl.appendChild(prevBtn);
 
@@ -56,7 +56,7 @@ const PlaceholderView = (function () {
       nextBtn = document.createElement("button");
       nextBtn.className = "study-arrow";
       nextBtn.type = "button";
-      nextBtn.textContent = "→";
+      nextBtn.textContent = ">";
       nextBtn.setAttribute("aria-label", "Next item");
       imageRowEl.appendChild(nextBtn);
 

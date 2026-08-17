@@ -1,7 +1,7 @@
 /**
- * Student Data (Google Sheets: "Students" worksheet)
- * --------------------------------------------------
- * Student information is loaded from the current semester's Google Sheet.
+ * Student Data
+ * ------------
+ * Student information is loaded from the generated static JSON file.
  */
 
 let STUDENTS = [];
@@ -15,12 +15,19 @@ async function loadStudentsData() {
   const startTime = performance.now();
   console.log("[Student Load] started");
 
-  studentLoadPromise = fetchJson("Students")
+  studentLoadPromise = fetch("data/students.json")
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Failed to load student data.");
+      }
+
+      return response.json();
+    })
     .then(function (data) {
       const fetchTime = performance.now();
 
       console.log(
-        "[Student Load] API response:",
+        "[Student Load] JSON response:",
         (fetchTime - startTime).toFixed(0) + " ms"
       );
 

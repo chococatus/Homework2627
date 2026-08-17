@@ -1,11 +1,17 @@
-//숙제 데이터를 가져오는 역할을 하는 파일
+// 숙제 데이터를 가져오는 역할을 하는 파일
 
 async function getHomeworkList() {
   const startTime = performance.now();
   console.log("[Homework Load] started");
 
   try {
-    const data = await fetchJson();
+    const response = await fetch("data/homework.json");
+
+    if (!response.ok) {
+      throw new Error("Failed to load homework data.");
+    }
+
+    const data = await response.json();
     const completeTime = performance.now();
 
     console.log(

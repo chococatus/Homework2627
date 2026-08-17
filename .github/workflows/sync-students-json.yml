@@ -27,7 +27,7 @@ jobs:
 
       - name: Commit changed data
         run: |
-          if git diff --quiet -- data/students.json; then
+          if [ -z "$(git status --porcelain -- data/students.json)" ]; then
             echo "Students data has not changed."
             exit 0
           fi

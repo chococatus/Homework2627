@@ -3,7 +3,7 @@ name: Sync Students JSON
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "0 13 * * 6"
 
 permissions:
   contents: write

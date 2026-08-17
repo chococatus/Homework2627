@@ -62,7 +62,7 @@ async function navigateToHomework(homework) {
   );
 
   hideAllViews();
-  PlaceholderView.show();
+  PlaceholderView.show(homework, weekWords);
 }
 
 // --- Wire up view callbacks ---

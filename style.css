@@ -4,7 +4,6 @@
    ============================================ */
 
 :root {
-  /* Pastel palette */
   --color-bg: #f7f3ff;
   --color-surface: #ffffff;
   --color-primary: #7c9cff;
@@ -14,7 +13,6 @@
   --color-border: #e4ddf5;
   --color-selected: #7c9cff;
 
-  /* Shape colors — soft and friendly */
   --shape-red: #ff9a9a;
   --shape-yellow: #ffe066;
   --shape-green: #8fd98f;
@@ -26,8 +24,6 @@
   --shadow: 0 4px 24px rgba(124, 156, 255, 0.12);
   --transition: 200ms ease;
 }
-
-/* --- Reset & base --- */
 
 *,
 *::before,
@@ -44,8 +40,6 @@ body {
   min-height: 100vh;
   line-height: 1.5;
 }
-
-/* --- Header (upper-left, subtle) --- */
 
 .site-header {
   position: fixed;
@@ -68,8 +62,6 @@ body {
   color: var(--color-text-muted);
   margin-top: 0.15rem;
 }
-
-/* --- Main layout --- */
 
 .page {
   display: flex;
@@ -99,8 +91,6 @@ body {
   color: var(--color-text);
 }
 
-/* --- Student card grid --- */
-
 .student-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -123,11 +113,14 @@ body {
   cursor: pointer;
   transition: transform var(--transition),
               border-color var(--transition),
-              box-shadow var(--transition);
+              box-shadow var(--transition),
+              background-color var(--transition);
   -webkit-tap-highlight-color: transparent;
 }
 
 .student-card:hover {
+  background-color: #eef2ff;
+  border-color: var(--color-border);
   box-shadow: 0 6px 28px rgba(124, 156, 255, 0.2);
 }
 
@@ -167,8 +160,6 @@ body {
   transform: scale(1);
 }
 
-/* --- Colored shape icons --- */
-
 .shape-icon {
   width: 56px;
   height: 56px;
@@ -194,8 +185,6 @@ body {
 .shape-icon--blue   { background-color: var(--shape-blue); }
 .shape-icon--purple { background-color: var(--shape-purple); }
 
-/* --- Welcome-back display --- */
-
 .welcome-student {
   display: flex;
   flex-direction: column;
@@ -212,8 +201,6 @@ body {
 .welcome-student .student-name {
   font-size: 1.75rem;
 }
-
-/* --- Home screen --- */
 
 .home-student {
   display: flex;
@@ -265,7 +252,6 @@ body {
   color: var(--color-text-muted);
 }
 
-/* Homework list */
 .homework-list {
   list-style: none;
   width: 100%;
@@ -318,7 +304,6 @@ body {
   color: var(--color-text);
 }
 
-/* --- Study screen --- */
 .study-week-label {
   font-size: 1rem;
   font-weight: 600;
@@ -334,13 +319,47 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.study-image-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 320px) 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
 .study-image {
   max-width: 320px;
   max-height: 260px;
-  width: auto;
+  width: 100%;
   height: auto;
   object-fit: contain;
-  margin-bottom: 1.25rem;
+  justify-self: center;
+}
+
+.study-arrow {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background-color var(--transition);
+}
+
+.study-arrow:hover {
+  background-color: #eef2ff;
+  transform: scale(1.06);
+}
+
+.study-arrow[hidden] {
+  visibility: hidden;
+  display: block;
 }
 
 .study-nav-button {
@@ -349,12 +368,9 @@ body {
   padding-bottom: 0.85rem;
 }
 
-/* Placeholder fallback */
 .placeholder-message {
   text-align: center;
 }
-
-/* --- Buttons — large and touch-friendly --- */
 
 .btn {
   display: block;
@@ -425,5 +441,16 @@ body {
   .shape-icon {
     width: 48px;
     height: 48px;
+  }
+
+  .study-image-row {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 0.4rem;
+  }
+
+  .study-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.6rem;
   }
 }

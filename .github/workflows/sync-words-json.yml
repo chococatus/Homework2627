@@ -1,0 +1,39 @@
+name: Sync Words JSON
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * 6"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-words:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download Words data
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://script.google.com/macros/s/AKfycbydvgjibp1ZbUbJpUxAjGpO6unRKq2U-Tuhz4B1WNMtGDHfd0DbfcHI9DPQBbY0tGUw/exec?sheet=Words" \
+            --output data/words.json
+
+      - name: Validate JSON
+        run: python -m json.tool data/words.json > /dev/null
+
+      - name: Commit changed data
+        run: |
+          if [ -z "$(git status --porcelain -- data/words.json)" ]; then
+            echo "Words data has not changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/words.json
+          git commit -m "Sync Words data from Google Sheets"
+          git push

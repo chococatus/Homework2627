@@ -1,13 +1,12 @@
 /**
  * Selection View — "Who are you?"
  * --------------------------------
- * First-visit student picker. Logic unchanged from v0.2.
+ * First-visit student picker.
  */
 
 const SelectionView = (function () {
   const viewEl = document.getElementById("selection-view");
   const gridEl = document.getElementById("student-grid");
-  const startBtn = document.getElementById("start-button");
 
   let selectedStudentId = null;
   let onStartCallback = null;
@@ -36,6 +35,14 @@ const SelectionView = (function () {
       selectStudentCard(student.id);
     });
 
+    card.addEventListener("dblclick", function () {
+      selectStudentCard(student.id);
+
+      if (onStartCallback) {
+        onStartCallback(student.id);
+      }
+    });
+
     return card;
   }
 
@@ -43,11 +50,10 @@ const SelectionView = (function () {
     selectedStudentId = studentId;
 
     gridEl.querySelectorAll(".student-card").forEach(function (card) {
-      card.classList.toggle("is-selected", card.dataset.studentId === studentId);
+      card.classList.toggle("is-selected", card.dataset.studentId === String(studentId));
     });
 
     saveSelectedStudent(studentId);
-    startBtn.disabled = false;
   }
 
   function renderGrid() {
@@ -59,7 +65,6 @@ const SelectionView = (function () {
 
   function show() {
     selectedStudentId = null;
-    startBtn.disabled = true;
     renderGrid();
     viewEl.hidden = false;
   }
@@ -70,16 +75,6 @@ const SelectionView = (function () {
 
   function init(onStart) {
     onStartCallback = onStart;
-
-    startBtn.addEventListener("click", function () {
-      const studentId = selectedStudentId || getSavedStudentId();
-      if (studentId) {
-        saveSelectedStudent(studentId);
-        if (onStartCallback) {
-          onStartCallback(studentId);
-        }
-      }
-    });
   }
 
   return { show, hide, init };

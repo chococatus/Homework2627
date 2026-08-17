@@ -14,6 +14,7 @@ const PlaceholderView = (function () {
   let items = [];
   let currentIndex = 0;
   let imageEl = null;
+  let imageRowEl = null;
   let prevBtn = null;
   let nextBtn = null;
 
@@ -22,19 +23,19 @@ const PlaceholderView = (function () {
     messageEl.classList.add("study-text");
     backBtn.classList.add("study-nav-button");
 
-    if (!imageEl) {
-      imageEl = document.createElement("img");
-      imageEl.className = "study-image";
-      imageEl.alt = "";
-      messageEl.insertAdjacentElement("beforebegin", imageEl);
+    if (!imageRowEl) {
+      imageRowEl = document.createElement("div");
+      imageRowEl.className = "study-image-row";
+      messageEl.insertAdjacentElement("beforebegin", imageRowEl);
     }
 
     if (!prevBtn) {
       prevBtn = document.createElement("button");
-      prevBtn.className = "btn btn--secondary study-nav-button";
+      prevBtn.className = "study-arrow";
       prevBtn.type = "button";
-      prevBtn.textContent = "Previous";
-      backBtn.insertAdjacentElement("beforebegin", prevBtn);
+      prevBtn.textContent = "←";
+      prevBtn.setAttribute("aria-label", "Previous item");
+      imageRowEl.appendChild(prevBtn);
 
       prevBtn.addEventListener("click", function () {
         if (currentIndex > 0) {
@@ -44,12 +45,20 @@ const PlaceholderView = (function () {
       });
     }
 
+    if (!imageEl) {
+      imageEl = document.createElement("img");
+      imageEl.className = "study-image";
+      imageEl.alt = "";
+      imageRowEl.appendChild(imageEl);
+    }
+
     if (!nextBtn) {
       nextBtn = document.createElement("button");
-      nextBtn.className = "btn btn--primary study-nav-button";
+      nextBtn.className = "study-arrow";
       nextBtn.type = "button";
-      nextBtn.textContent = "Next";
-      backBtn.insertAdjacentElement("beforebegin", nextBtn);
+      nextBtn.textContent = "→";
+      nextBtn.setAttribute("aria-label", "Next item");
+      imageRowEl.appendChild(nextBtn);
 
       nextBtn.addEventListener("click", function () {
         if (currentIndex < items.length - 1) {
@@ -83,10 +92,8 @@ const PlaceholderView = (function () {
       imageEl.hidden = true;
     }
 
-    prevBtn.hidden = false;
-    nextBtn.hidden = false;
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === items.length - 1;
+    prevBtn.hidden = currentIndex === 0;
+    nextBtn.hidden = currentIndex === items.length - 1;
   }
 
   function show(homework, weekItems) {

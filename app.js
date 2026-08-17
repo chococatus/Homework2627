@@ -48,7 +48,19 @@ function navigateToWelcome(studentId) {
   WelcomeView.show(student);
 }
 
-function navigateToHomework(homework) {
+async function navigateToHomework(homework) {
+  await loadWordsData();
+
+  const weekWords = getWordsByWeek(homework.week);
+
+  console.log(
+    "[Homework Words] week:",
+    homework.week,
+    "items:",
+    weekWords.length,
+    weekWords
+  );
+
   hideAllViews();
   PlaceholderView.show();
 }

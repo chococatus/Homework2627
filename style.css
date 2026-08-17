@@ -363,7 +363,8 @@ body {
 }
 
 .study-speak-button,
-.study-recognition-button {
+.study-recognition-button,
+.study-replay-button {
   border: 2px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-surface);
@@ -376,22 +377,25 @@ body {
   transition: transform var(--transition), border-color var(--transition);
 }
 
-.study-speak-button {
+.study-speak-button,
+.study-recognition-button {
   margin-bottom: 0.75rem;
 }
 
-.study-recognition-button {
+.study-replay-button {
   margin-bottom: 1.5rem;
 }
 
 .study-speak-button:hover:not(:disabled),
-.study-recognition-button:hover:not(:disabled) {
+.study-recognition-button:hover:not(:disabled),
+.study-replay-button:hover:not(:disabled) {
   border-color: var(--color-primary);
   transform: scale(1.03);
 }
 
 .study-speak-button:disabled,
-.study-recognition-button:disabled {
+.study-recognition-button:disabled,
+.study-replay-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

@@ -19,17 +19,54 @@ const PlaceholderView = (function () {
   let nextBtn = null;
   let speakBtn = null;
 
+  function getKoreanVoice() {
+    if (!("speechSynthesis" in window)) {
+      return null;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+
+    return voices.find(function (voice) {
+      return voice.lang && voice.lang.toLowerCase().startsWith("ko");
+    }) || null;
+  }
+
   function speakCurrentItem() {
-    if (items.length === 0 || !("speechSynthesis" in window)) {
+    if (items.length === 0) {
+      return;
+    }
+
+    if (!("speechSynthesis" in window)) {
+      console.error("[TTS] speechSynthesis is not supported in this browser.");
       return;
     }
 
     const item = items[currentIndex];
     const utterance = new SpeechSynthesisUtterance(item.text);
+    const koreanVoice = getKoreanVoice();
+
     utterance.lang = "ko-KR";
 
+    if (koreanVoice) {
+      utterance.voice = koreanVoice;
+      console.log("[TTS] voice:", koreanVoice.name, koreanVoice.lang);
+    } else {
+      console.warn("[TTS] No Korean voice found. Using the browser default voice with ko-KR.");
+    }
+
+    utterance.onstart = function () {
+      console.log("[TTS] started:", item.text);
+    };
+
+    utterance.onerror = function (event) {
+      console.error("[TTS] error:", event.error);
+    };
+
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+
+    setTimeout(function () {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   }
 
   function ensureControls() {

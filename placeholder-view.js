@@ -18,6 +18,8 @@ const PlaceholderView = (function () {
   let prevBtn = null;
   let nextBtn = null;
   let speakBtn = null;
+  let recognitionBtn = null;
+  let recognition = null;
 
   function getKoreanVoice() {
     if (!("speechSynthesis" in window)) {
@@ -67,6 +69,58 @@ const PlaceholderView = (function () {
     setTimeout(function () {
       window.speechSynthesis.speak(utterance);
     }, 50);
+  }
+
+  function getSpeechRecognitionConstructor() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function startSpeechRecognition() {
+    if (items.length === 0) {
+      return;
+    }
+
+    const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
+
+    if (!SpeechRecognitionConstructor) {
+      console.error("[Speech Recognition] Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (!recognition) {
+      recognition = new SpeechRecognitionConstructor();
+      recognition.lang = "ko-KR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+
+      recognition.onstart = function () {
+        recognitionBtn.textContent = "🎤 Listening...";
+        recognitionBtn.disabled = true;
+        console.log("[Speech Recognition] started");
+      };
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        console.log("[Speech Recognition] result:", transcript);
+      };
+
+      recognition.onerror = function (event) {
+        console.error("[Speech Recognition] error:", event.error);
+      };
+
+      recognition.onend = function () {
+        recognitionBtn.textContent = "🎤 Speak";
+        recognitionBtn.disabled = false;
+        console.log("[Speech Recognition] ended");
+      };
+    }
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error("[Speech Recognition] could not start:", error);
+    }
   }
 
   function ensureControls() {
@@ -129,6 +183,17 @@ const PlaceholderView = (function () {
 
       speakBtn.addEventListener("click", speakCurrentItem);
     }
+
+    if (!recognitionBtn) {
+      recognitionBtn = document.createElement("button");
+      recognitionBtn.className = "study-recognition-button";
+      recognitionBtn.type = "button";
+      recognitionBtn.textContent = "🎤 Speak";
+      recognitionBtn.setAttribute("aria-label", "Speak this Korean text");
+      speakBtn.insertAdjacentElement("afterend", recognitionBtn);
+
+      recognitionBtn.addEventListener("click", startSpeechRecognition);
+    }
   }
 
   function renderCurrentItem() {
@@ -140,6 +205,7 @@ const PlaceholderView = (function () {
       prevBtn.hidden = true;
       nextBtn.hidden = true;
       speakBtn.hidden = true;
+      recognitionBtn.hidden = true;
       return;
     }
 
@@ -159,6 +225,8 @@ const PlaceholderView = (function () {
     nextBtn.hidden = currentIndex === items.length - 1;
     speakBtn.hidden = false;
     speakBtn.disabled = !("speechSynthesis" in window);
+    recognitionBtn.hidden = false;
+    recognitionBtn.disabled = !getSpeechRecognitionConstructor();
   }
 
   function show(homework, weekItems) {
@@ -173,6 +241,15 @@ const PlaceholderView = (function () {
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
+
+    if (recognition) {
+      try {
+        recognition.abort();
+      } catch (error) {
+        console.warn("[Speech Recognition] abort failed:", error);
+      }
+    }
+
     viewEl.hidden = true;
   }
 

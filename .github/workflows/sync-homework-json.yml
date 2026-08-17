@@ -1,0 +1,39 @@
+name: Sync Homework JSON
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * 6"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-homework:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download Homework data
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://script.google.com/macros/s/AKfycbydvgjibp1ZbUbJpUxAjGpO6unRKq2U-Tuhz4B1WNMtGDHfd0DbfcHI9DPQBbY0tGUw/exec?sheet=Homework" \
+            --output data/homework.json
+
+      - name: Validate JSON
+        run: python -m json.tool data/homework.json > /dev/null
+
+      - name: Commit changed data
+        run: |
+          if [ -z "$(git status --porcelain -- data/homework.json)" ]; then
+            echo "Homework data has not changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/homework.json
+          git commit -m "Sync Homework data from Google Sheets"
+          git push

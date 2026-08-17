@@ -362,7 +362,8 @@ body {
   display: block;
 }
 
-.study-speak-button {
+.study-speak-button,
+.study-recognition-button {
   border: 2px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-surface);
@@ -370,18 +371,27 @@ body {
   font-size: 1rem;
   font-weight: 700;
   padding: 0.7rem 1.1rem;
-  margin-bottom: 1.5rem;
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform var(--transition), border-color var(--transition);
 }
 
-.study-speak-button:hover:not(:disabled) {
+.study-speak-button {
+  margin-bottom: 0.75rem;
+}
+
+.study-recognition-button {
+  margin-bottom: 1.5rem;
+}
+
+.study-speak-button:hover:not(:disabled),
+.study-recognition-button:hover:not(:disabled) {
   border-color: var(--color-primary);
   transform: scale(1.03);
 }
 
-.study-speak-button:disabled {
+.study-speak-button:disabled,
+.study-recognition-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

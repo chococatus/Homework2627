@@ -18,6 +18,7 @@ const PlaceholderView = (function () {
   let prevBtn = null;
   let nextBtn = null;
   let speakBtn = null;
+  let voiceRowEl = null;
   let recognitionBtn = null;
   let replayBtn = null;
   let recognition = null;
@@ -276,13 +277,19 @@ const PlaceholderView = (function () {
       speakBtn.addEventListener("click", speakCurrentItem);
     }
 
+    if (!voiceRowEl) {
+      voiceRowEl = document.createElement("div");
+      voiceRowEl.className = "study-voice-row";
+      speakBtn.insertAdjacentElement("afterend", voiceRowEl);
+    }
+
     if (!recognitionBtn) {
       recognitionBtn = document.createElement("button");
       recognitionBtn.className = "study-recognition-button";
       recognitionBtn.type = "button";
       recognitionBtn.textContent = "🎤 Speak";
       recognitionBtn.setAttribute("aria-label", "Speak this Korean text");
-      speakBtn.insertAdjacentElement("afterend", recognitionBtn);
+      voiceRowEl.appendChild(recognitionBtn);
 
       recognitionBtn.addEventListener("click", startSpeechRecognition);
     }
@@ -294,7 +301,7 @@ const PlaceholderView = (function () {
       replayBtn.textContent = "▶ My Voice";
       replayBtn.setAttribute("aria-label", "Replay my recorded voice");
       replayBtn.hidden = true;
-      recognitionBtn.insertAdjacentElement("afterend", replayBtn);
+      voiceRowEl.appendChild(replayBtn);
 
       replayBtn.addEventListener("click", replayTemporaryRecording);
     }

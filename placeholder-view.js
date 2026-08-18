@@ -21,6 +21,7 @@ const PlaceholderView = (function () {
   let voiceRowEl = null;
   let recognitionBtn = null;
   let replayBtn = null;
+  let resultEl = null;
   let recognition = null;
   let mediaRecorder = null;
   let recordingStream = null;
@@ -79,6 +80,128 @@ const PlaceholderView = (function () {
 
   function getSpeechRecognitionConstructor() {
     return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function normalizeComparisonText(text) {
+    return String(text || "")
+      .normalize("NFC")
+      .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
+  }
+
+  function compareTargetToHeard(target, heard) {
+    const targetChars = Array.from(target);
+    const heardChars = Array.from(heard);
+    const rows = targetChars.length + 1;
+    const cols = heardChars.length + 1;
+    const matrix = Array.from({ length: rows }, function () {
+      return Array(cols).fill(0);
+    });
+
+    for (let i = 0; i < rows; i += 1) {
+      matrix[i][0] = i;
+    }
+
+    for (let j = 0; j < cols; j += 1) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i < rows; i += 1) {
+      for (let j = 1; j < cols; j += 1) {
+        const substitutionCost = targetChars[i - 1] === heardChars[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + substitutionCost
+        );
+      }
+    }
+
+    const targetMatches = Array(targetChars.length).fill(true);
+    let i = targetChars.length;
+    let j = heardChars.length;
+
+    while (i > 0 || j > 0) {
+      if (
+        i > 0 &&
+        j > 0 &&
+        targetChars[i - 1] === heardChars[j - 1] &&
+        matrix[i][j] === matrix[i - 1][j - 1]
+      ) {
+        i -= 1;
+        j -= 1;
+        continue;
+      }
+
+      if (i > 0 && j > 0 && matrix[i][j] === matrix[i - 1][j - 1] + 1) {
+        targetMatches[i - 1] = false;
+        i -= 1;
+        j -= 1;
+        continue;
+      }
+
+      if (i > 0 && matrix[i][j] === matrix[i - 1][j] + 1) {
+        targetMatches[i - 1] = false;
+        i -= 1;
+        continue;
+      }
+
+      if (j > 0) {
+        j -= 1;
+      }
+    }
+
+    return {
+      distance: matrix[targetChars.length][heardChars.length],
+      targetChars: targetChars,
+      targetMatches: targetMatches,
+    };
+  }
+
+  function clearRecognitionResult() {
+    if (resultEl) {
+      resultEl.innerHTML = "";
+      resultEl.hidden = true;
+      resultEl.classList.remove("is-match", "needs-practice");
+    }
+  }
+
+  function renderRecognitionResult(transcript) {
+    if (!resultEl || items.length === 0) {
+      return;
+    }
+
+    const target = normalizeComparisonText(items[currentIndex].text);
+    const heard = normalizeComparisonText(transcript);
+    const comparison = compareTargetToHeard(target, heard);
+    const isMatch = comparison.distance === 0;
+
+    resultEl.innerHTML = "";
+    resultEl.hidden = false;
+    resultEl.classList.toggle("is-match", isMatch);
+    resultEl.classList.toggle("needs-practice", !isMatch);
+
+    const heardLine = document.createElement("p");
+    heardLine.className = "study-result-heard";
+    heardLine.textContent = "I heard: " + transcript;
+    resultEl.appendChild(heardLine);
+
+    const checkLine = document.createElement("p");
+    checkLine.className = "study-result-check";
+
+    const label = document.createElement("span");
+    label.textContent = isMatch ? "✓ Match: " : "Check: ";
+    checkLine.appendChild(label);
+
+    comparison.targetChars.forEach(function (char, index) {
+      const span = document.createElement("span");
+      span.textContent = char;
+      if (!comparison.targetMatches[index]) {
+        span.className = "study-result-mismatch";
+      }
+      checkLine.appendChild(span);
+    });
+
+    resultEl.appendChild(checkLine);
   }
 
   function clearTemporaryRecording() {
@@ -174,6 +297,7 @@ const PlaceholderView = (function () {
       return;
     }
 
+    clearRecognitionResult();
     await startTemporaryRecording();
 
     if (!recognition) {
@@ -192,6 +316,7 @@ const PlaceholderView = (function () {
       recognition.onresult = function (event) {
         const transcript = event.results[0][0].transcript;
         console.log("[Speech Recognition] result:", transcript);
+        renderRecognitionResult(transcript);
       };
 
       recognition.onerror = function (event) {
@@ -237,6 +362,7 @@ const PlaceholderView = (function () {
         if (currentIndex > 0) {
           currentIndex -= 1;
           clearTemporaryRecording();
+          clearRecognitionResult();
           renderCurrentItem();
         }
       });
@@ -261,6 +387,7 @@ const PlaceholderView = (function () {
         if (currentIndex < items.length - 1) {
           currentIndex += 1;
           clearTemporaryRecording();
+          clearRecognitionResult();
           renderCurrentItem();
         }
       });
@@ -305,6 +432,13 @@ const PlaceholderView = (function () {
 
       replayBtn.addEventListener("click", replayTemporaryRecording);
     }
+
+    if (!resultEl) {
+      resultEl = document.createElement("div");
+      resultEl.className = "study-recognition-result";
+      resultEl.hidden = true;
+      voiceRowEl.insertAdjacentElement("afterend", resultEl);
+    }
   }
 
   function renderCurrentItem() {
@@ -318,6 +452,7 @@ const PlaceholderView = (function () {
       speakBtn.hidden = true;
       recognitionBtn.hidden = true;
       replayBtn.hidden = true;
+      clearRecognitionResult();
       return;
     }
 
@@ -345,6 +480,7 @@ const PlaceholderView = (function () {
     items = Array.isArray(weekItems) ? weekItems : [];
     currentIndex = 0;
     clearTemporaryRecording();
+    clearRecognitionResult();
     titleEl.textContent = "Week " + homework.week + " — " + homework.title;
     renderCurrentItem();
     viewEl.hidden = false;
@@ -365,6 +501,7 @@ const PlaceholderView = (function () {
 
     stopTemporaryRecording();
     clearTemporaryRecording();
+    clearRecognitionResult();
     viewEl.hidden = true;
   }
 

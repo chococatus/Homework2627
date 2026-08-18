@@ -377,13 +377,17 @@ body {
   transition: transform var(--transition), border-color var(--transition);
 }
 
-.study-speak-button,
-.study-recognition-button {
+.study-speak-button {
   margin-bottom: 0.75rem;
 }
 
-.study-replay-button {
-  margin-bottom: 1.5rem;
+.study-voice-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  margin-bottom: 1rem;
 }
 
 .study-speak-button:hover:not(:disabled),
@@ -398,6 +402,44 @@ body {
 .study-replay-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.study-recognition-result {
+  width: 100%;
+  max-width: 420px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.study-recognition-result.is-match {
+  border-color: #8fd98f;
+}
+
+.study-recognition-result.needs-practice {
+  border-color: #ffb3b3;
+}
+
+.study-result-heard {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.study-result-check {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.study-result-mismatch {
+  color: #d94b4b;
+  background: #fff0f0;
+  border-radius: 4px;
+  padding: 0 0.08em;
 }
 
 .study-nav-button {
@@ -490,5 +532,9 @@ body {
     width: 40px;
     height: 40px;
     font-size: 1.6rem;
+  }
+
+  .study-voice-row {
+    gap: 0.4rem;
   }
 }

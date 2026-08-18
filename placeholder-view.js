@@ -19,7 +19,12 @@ const PlaceholderView = (function () {
   let nextBtn = null;
   let speakBtn = null;
   let recognitionBtn = null;
+  let replayBtn = null;
   let recognition = null;
+  let mediaRecorder = null;
+  let recordingStream = null;
+  let recordingChunks = [];
+  let recordingUrl = null;
 
   function getKoreanVoice() {
     if (!("speechSynthesis" in window)) {
@@ -75,7 +80,88 @@ const PlaceholderView = (function () {
     return window.SpeechRecognition || window.webkitSpeechRecognition || null;
   }
 
-  function startSpeechRecognition() {
+  function clearTemporaryRecording() {
+    if (recordingUrl) {
+      URL.revokeObjectURL(recordingUrl);
+      recordingUrl = null;
+    }
+
+    recordingChunks = [];
+
+    if (replayBtn) {
+      replayBtn.hidden = true;
+    }
+  }
+
+  function stopRecordingStream() {
+    if (recordingStream) {
+      recordingStream.getTracks().forEach(function (track) {
+        track.stop();
+      });
+      recordingStream = null;
+    }
+  }
+
+  function stopTemporaryRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    } else {
+      stopRecordingStream();
+    }
+  }
+
+  async function startTemporaryRecording() {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !("MediaRecorder" in window)) {
+      console.warn("[Recording] Temporary recording is not supported in this browser.");
+      return false;
+    }
+
+    clearTemporaryRecording();
+
+    try {
+      recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordingChunks = [];
+      mediaRecorder = new MediaRecorder(recordingStream);
+
+      mediaRecorder.ondataavailable = function (event) {
+        if (event.data && event.data.size > 0) {
+          recordingChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = function () {
+        if (recordingChunks.length > 0) {
+          const blob = new Blob(recordingChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          recordingUrl = URL.createObjectURL(blob);
+          replayBtn.hidden = false;
+          console.log("[Recording] ready for replay");
+        }
+
+        stopRecordingStream();
+      };
+
+      mediaRecorder.start();
+      console.log("[Recording] started");
+      return true;
+    } catch (error) {
+      console.error("[Recording] could not start:", error);
+      stopRecordingStream();
+      return false;
+    }
+  }
+
+  function replayTemporaryRecording() {
+    if (!recordingUrl) {
+      return;
+    }
+
+    const audio = new Audio(recordingUrl);
+    audio.play().catch(function (error) {
+      console.error("[Recording] replay failed:", error);
+    });
+  }
+
+  async function startSpeechRecognition() {
     if (items.length === 0) {
       return;
     }
@@ -86,6 +172,8 @@ const PlaceholderView = (function () {
       console.error("[Speech Recognition] Speech recognition is not supported in this browser.");
       return;
     }
+
+    await startTemporaryRecording();
 
     if (!recognition) {
       recognition = new SpeechRecognitionConstructor();
@@ -110,6 +198,7 @@ const PlaceholderView = (function () {
       };
 
       recognition.onend = function () {
+        stopTemporaryRecording();
         recognitionBtn.textContent = "🎤 Speak";
         recognitionBtn.disabled = false;
         console.log("[Speech Recognition] ended");
@@ -119,6 +208,7 @@ const PlaceholderView = (function () {
     try {
       recognition.start();
     } catch (error) {
+      stopTemporaryRecording();
       console.error("[Speech Recognition] could not start:", error);
     }
   }
@@ -145,6 +235,7 @@ const PlaceholderView = (function () {
       prevBtn.addEventListener("click", function () {
         if (currentIndex > 0) {
           currentIndex -= 1;
+          clearTemporaryRecording();
           renderCurrentItem();
         }
       });
@@ -168,6 +259,7 @@ const PlaceholderView = (function () {
       nextBtn.addEventListener("click", function () {
         if (currentIndex < items.length - 1) {
           currentIndex += 1;
+          clearTemporaryRecording();
           renderCurrentItem();
         }
       });
@@ -194,6 +286,18 @@ const PlaceholderView = (function () {
 
       recognitionBtn.addEventListener("click", startSpeechRecognition);
     }
+
+    if (!replayBtn) {
+      replayBtn = document.createElement("button");
+      replayBtn.className = "study-replay-button";
+      replayBtn.type = "button";
+      replayBtn.textContent = "▶ My Voice";
+      replayBtn.setAttribute("aria-label", "Replay my recorded voice");
+      replayBtn.hidden = true;
+      recognitionBtn.insertAdjacentElement("afterend", replayBtn);
+
+      replayBtn.addEventListener("click", replayTemporaryRecording);
+    }
   }
 
   function renderCurrentItem() {
@@ -206,6 +310,7 @@ const PlaceholderView = (function () {
       nextBtn.hidden = true;
       speakBtn.hidden = true;
       recognitionBtn.hidden = true;
+      replayBtn.hidden = true;
       return;
     }
 
@@ -232,6 +337,7 @@ const PlaceholderView = (function () {
   function show(homework, weekItems) {
     items = Array.isArray(weekItems) ? weekItems : [];
     currentIndex = 0;
+    clearTemporaryRecording();
     titleEl.textContent = "Week " + homework.week + " — " + homework.title;
     renderCurrentItem();
     viewEl.hidden = false;
@@ -250,6 +356,8 @@ const PlaceholderView = (function () {
       }
     }
 
+    stopTemporaryRecording();
+    clearTemporaryRecording();
     viewEl.hidden = true;
   }
 

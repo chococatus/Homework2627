@@ -88,6 +88,14 @@ const PlaceholderView = (function () {
       .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
   }
 
+  function cleanDisplayTranscript(text) {
+    return String(text || "")
+      .normalize("NFC")
+      .replace(/[.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function compareTargetToHeard(target, heard) {
     const targetChars = Array.from(target);
     const heardChars = Array.from(heard);
@@ -117,6 +125,7 @@ const PlaceholderView = (function () {
     }
 
     const targetMatches = Array(targetChars.length).fill(true);
+    const heardMatches = Array(heardChars.length).fill(true);
     let i = targetChars.length;
     let j = heardChars.length;
 
@@ -134,6 +143,7 @@ const PlaceholderView = (function () {
 
       if (i > 0 && j > 0 && matrix[i][j] === matrix[i - 1][j - 1] + 1) {
         targetMatches[i - 1] = false;
+        heardMatches[j - 1] = false;
         i -= 1;
         j -= 1;
         continue;
@@ -146,6 +156,7 @@ const PlaceholderView = (function () {
       }
 
       if (j > 0) {
+        heardMatches[j - 1] = false;
         j -= 1;
       }
     }
@@ -154,6 +165,8 @@ const PlaceholderView = (function () {
       distance: matrix[targetChars.length][heardChars.length],
       targetChars: targetChars,
       targetMatches: targetMatches,
+      heardChars: heardChars,
+      heardMatches: heardMatches,
     };
   }
 
@@ -172,6 +185,7 @@ const PlaceholderView = (function () {
 
     const target = normalizeComparisonText(items[currentIndex].text);
     const heard = normalizeComparisonText(transcript);
+    const displayHeard = cleanDisplayTranscript(transcript);
     const comparison = compareTargetToHeard(target, heard);
     const isMatch = comparison.distance === 0;
 
@@ -180,28 +194,39 @@ const PlaceholderView = (function () {
     resultEl.classList.toggle("is-match", isMatch);
     resultEl.classList.toggle("needs-practice", !isMatch);
 
-    const heardLine = document.createElement("p");
-    heardLine.className = "study-result-heard";
-    heardLine.textContent = "I heard: " + transcript;
-    resultEl.appendChild(heardLine);
-
-    const checkLine = document.createElement("p");
-    checkLine.className = "study-result-check";
+    const resultLine = document.createElement("p");
+    resultLine.className = "study-result-line";
 
     const label = document.createElement("span");
-    label.textContent = isMatch ? "✓ Match: " : "Check: ";
-    checkLine.appendChild(label);
+    label.className = "study-result-label";
+    label.textContent = "I heard: ";
+    resultLine.appendChild(label);
 
-    comparison.targetChars.forEach(function (char, index) {
+    let heardIndex = 0;
+    Array.from(displayHeard).forEach(function (char) {
+      if (/\s/.test(char)) {
+        resultLine.appendChild(document.createTextNode(char));
+        return;
+      }
+
       const span = document.createElement("span");
       span.textContent = char;
-      if (!comparison.targetMatches[index]) {
-        span.className = "study-result-mismatch";
-      }
-      checkLine.appendChild(span);
+      span.className = comparison.heardMatches[heardIndex]
+        ? "study-result-match"
+        : "study-result-mismatch";
+      resultLine.appendChild(span);
+      heardIndex += 1;
     });
 
-    resultEl.appendChild(checkLine);
+    if (isMatch) {
+      const icon = document.createElement("span");
+      icon.className = "study-result-success-icon";
+      icon.textContent = " ✓";
+      icon.setAttribute("aria-label", "Correct");
+      resultLine.appendChild(icon);
+    }
+
+    resultEl.appendChild(resultLine);
   }
 
   function clearTemporaryRecording() {

@@ -10,7 +10,6 @@ const StudyPosition = (function () {
   let fillEl = null;
   let countEl = null;
   let fireworksEl = null;
-  let homeBtn = null;
   let current = 0;
   let total = 0;
 
@@ -19,33 +18,19 @@ const StudyPosition = (function () {
   }
 
   function ensureCompletionElements() {
-    if (fireworksEl && homeBtn) {
+    if (fireworksEl) {
       return;
     }
 
     const imageEl = document.querySelector("#placeholder-view .study-image");
-    const backBtn = document.getElementById("placeholder-back-button");
 
-    if (!fireworksEl && imageEl) {
+    if (imageEl) {
       fireworksEl = document.createElement("div");
       fireworksEl.className = "study-completion-fireworks";
       fireworksEl.textContent = "🎆🎉🎆";
       fireworksEl.setAttribute("aria-label", "Celebration");
       fireworksEl.hidden = true;
       imageEl.insertAdjacentElement("afterend", fireworksEl);
-    }
-
-    if (!homeBtn) {
-      homeBtn = document.createElement("button");
-      homeBtn.className = "btn btn--primary study-completion-home";
-      homeBtn.type = "button";
-      homeBtn.textContent = "Home으로";
-      homeBtn.hidden = true;
-      backBtn.insertAdjacentElement("beforebegin", homeBtn);
-
-      homeBtn.addEventListener("click", function () {
-        backBtn.click();
-      });
     }
   }
 
@@ -84,8 +69,7 @@ const StudyPosition = (function () {
       rowEl.hidden = true;
     }
 
-    backBtn.hidden = true;
-    homeBtn.hidden = false;
+    backBtn.hidden = false;
   }
 
   function restoreStudyScreen() {
@@ -97,9 +81,6 @@ const StudyPosition = (function () {
 
     if (fireworksEl) {
       fireworksEl.hidden = true;
-    }
-    if (homeBtn) {
-      homeBtn.hidden = true;
     }
     if (imageEl) {
       imageEl.hidden = false;
@@ -200,9 +181,6 @@ const StudyPosition = (function () {
     }
     if (fireworksEl) {
       fireworksEl.hidden = true;
-    }
-    if (homeBtn) {
-      homeBtn.hidden = true;
     }
   }
 

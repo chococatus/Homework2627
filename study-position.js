@@ -44,6 +44,8 @@ const StudyPosition = (function () {
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
+    const listenBtn = document.querySelector("#placeholder-view .study-speak-button");
+    const speakBtn = document.querySelector("#placeholder-view .study-recognition-button");
     const resultEl = document.querySelector("#placeholder-view .study-recognition-result");
 
     saveLastItemSnapshot();
@@ -69,7 +71,15 @@ const StudyPosition = (function () {
     }
 
     if (voiceRow) {
-      voiceRow.hidden = true;
+      voiceRow.hidden = false;
+    }
+
+    if (listenBtn) {
+      listenBtn.hidden = true;
+    }
+
+    if (speakBtn) {
+      speakBtn.hidden = true;
     }
 
     if (resultEl) {
@@ -90,6 +100,8 @@ const StudyPosition = (function () {
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
+    const listenBtn = document.querySelector("#placeholder-view .study-speak-button");
+    const speakBtn = document.querySelector("#placeholder-view .study-recognition-button");
 
     completionActive = false;
 
@@ -116,6 +128,14 @@ const StudyPosition = (function () {
 
     if (voiceRow) {
       voiceRow.hidden = false;
+    }
+
+    if (listenBtn) {
+      listenBtn.hidden = false;
+    }
+
+    if (speakBtn) {
+      speakBtn.hidden = false;
     }
 
     renderPositionOnly();

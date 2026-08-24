@@ -418,21 +418,21 @@ const PlaceholderView = (function () {
       });
     }
 
+    if (!voiceRowEl) {
+      voiceRowEl = document.createElement("div");
+      voiceRowEl.className = "study-voice-row";
+      messageEl.insertAdjacentElement("afterend", voiceRowEl);
+    }
+
     if (!speakBtn) {
       speakBtn = document.createElement("button");
       speakBtn.className = "study-speak-button";
       speakBtn.type = "button";
       speakBtn.textContent = "🔊 Listen";
       speakBtn.setAttribute("aria-label", "Listen to this Korean text");
-      messageEl.insertAdjacentElement("afterend", speakBtn);
+      voiceRowEl.appendChild(speakBtn);
 
       speakBtn.addEventListener("click", speakCurrentItem);
-    }
-
-    if (!voiceRowEl) {
-      voiceRowEl = document.createElement("div");
-      voiceRowEl.className = "study-voice-row";
-      speakBtn.insertAdjacentElement("afterend", voiceRowEl);
     }
 
     if (!recognitionBtn) {

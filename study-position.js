@@ -132,15 +132,14 @@ const StudyPosition = (function () {
       return;
     }
 
+    nextBtn.textContent = ">";
+    nextBtn.classList.remove("study-finish-button");
+
     if (current === total) {
       nextBtn.hidden = false;
-      nextBtn.textContent = "끝! 🎉";
       nextBtn.setAttribute("aria-label", "Finish study");
-      nextBtn.classList.add("study-finish-button");
     } else {
-      nextBtn.textContent = ">";
       nextBtn.setAttribute("aria-label", "Next item");
-      nextBtn.classList.remove("study-finish-button");
     }
   }
 

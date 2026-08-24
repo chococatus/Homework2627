@@ -321,7 +321,7 @@ body {
 
 .study-image-row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 320px) 56px;
+  grid-template-columns: 56px 320px 56px;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
@@ -330,10 +330,8 @@ body {
 }
 
 .study-image {
-  max-width: 320px;
-  max-height: 260px;
-  width: 100%;
-  height: auto;
+  width: 320px;
+  height: 240px;
   object-fit: contain;
   justify-self: center;
 }
@@ -375,14 +373,12 @@ body {
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform var(--transition), border-color var(--transition);
-}
-
-.study-speak-button {
-  margin-bottom: 0.75rem;
+  white-space: nowrap;
 }
 
 .study-voice-row {
   display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
@@ -524,17 +520,30 @@ body {
   }
 
   .study-image-row {
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    gap: 0.4rem;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    gap: 0.35rem;
+  }
+
+  .study-image {
+    width: 100%;
+    height: 210px;
   }
 
   .study-arrow {
-    width: 40px;
-    height: 40px;
-    font-size: 1.6rem;
+    width: 38px;
+    height: 38px;
+    font-size: 1.5rem;
   }
 
   .study-voice-row {
-    gap: 0.4rem;
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .study-speak-button,
+  .study-recognition-button,
+  .study-replay-button {
+    font-size: 0.82rem;
+    padding: 0.6rem 0.65rem;
   }
 }

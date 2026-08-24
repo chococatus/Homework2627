@@ -9,7 +9,8 @@ const StudyPosition = (function () {
   let rowEl = null;
   let fillEl = null;
   let countEl = null;
-  let completionEl = null;
+  let fireworksEl = null;
+  let homeBtn = null;
   let current = 0;
   let total = 0;
 
@@ -17,55 +18,97 @@ const StudyPosition = (function () {
     return document.querySelector('.study-arrow[aria-label="Next item"], .study-arrow[aria-label="Finish study"]');
   }
 
-  function ensureCompletionScreen() {
-    if (completionEl) {
+  function ensureCompletionElements() {
+    if (fireworksEl && homeBtn) {
       return;
     }
 
-    const viewEl = document.getElementById("placeholder-view");
+    const imageEl = document.querySelector("#placeholder-view .study-image");
     const backBtn = document.getElementById("placeholder-back-button");
 
-    completionEl = document.createElement("div");
-    completionEl.className = "study-completion";
-    completionEl.hidden = true;
-    completionEl.innerHTML = [
-      '<div class="study-completion__icon" aria-hidden="true">🎉</div>',
-      '<h2 class="study-completion__title">잘했어!</h2>',
-      '<p class="study-completion__message">이번 주 말하기 연습 끝!</p>',
-      '<button class="btn btn--primary study-completion__home" type="button">Home으로</button>'
-    ].join("");
+    if (!fireworksEl && imageEl) {
+      fireworksEl = document.createElement("div");
+      fireworksEl.className = "study-completion-fireworks";
+      fireworksEl.textContent = "🎆🎉🎆";
+      fireworksEl.setAttribute("aria-label", "Celebration");
+      fireworksEl.hidden = true;
+      imageEl.insertAdjacentElement("afterend", fireworksEl);
+    }
 
-    completionEl.querySelector(".study-completion__home").addEventListener("click", function () {
-      backBtn.click();
-    });
+    if (!homeBtn) {
+      homeBtn = document.createElement("button");
+      homeBtn.className = "btn btn--primary study-completion-home";
+      homeBtn.type = "button";
+      homeBtn.textContent = "Home으로";
+      homeBtn.hidden = true;
+      backBtn.insertAdjacentElement("beforebegin", homeBtn);
 
-    viewEl.appendChild(completionEl);
-  }
-
-  function setStudyContentHidden(hidden) {
-    const viewEl = document.getElementById("placeholder-view");
-
-    Array.from(viewEl.children).forEach(function (child) {
-      if (child === completionEl) {
-        return;
-      }
-      child.hidden = hidden;
-    });
+      homeBtn.addEventListener("click", function () {
+        backBtn.click();
+      });
+    }
   }
 
   function showCompletion() {
-    ensureCompletionScreen();
-    setStudyContentHidden(true);
-    completionEl.hidden = false;
+    ensureCompletionElements();
+
+    const messageEl = document.querySelector("#placeholder-view .study-text");
+    const imageEl = document.querySelector("#placeholder-view .study-image");
+    const prevBtn = document.querySelector('.study-arrow[aria-label="Previous item"]');
+    const nextBtn = getNextButton();
+    const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
+    const resultEl = document.querySelector("#placeholder-view .study-recognition-result");
+    const backBtn = document.getElementById("placeholder-back-button");
+
+    messageEl.textContent = "잘했어!";
+
+    if (imageEl) {
+      imageEl.hidden = true;
+    }
+    if (fireworksEl) {
+      fireworksEl.hidden = false;
+    }
+    if (prevBtn) {
+      prevBtn.hidden = true;
+    }
+    if (nextBtn) {
+      nextBtn.hidden = true;
+    }
+    if (voiceRow) {
+      voiceRow.hidden = true;
+    }
+    if (resultEl) {
+      resultEl.hidden = true;
+    }
+    if (rowEl) {
+      rowEl.hidden = true;
+    }
+
+    backBtn.hidden = true;
+    homeBtn.hidden = false;
   }
 
   function restoreStudyScreen() {
-    if (!completionEl) {
-      return;
+    ensureCompletionElements();
+
+    const imageEl = document.querySelector("#placeholder-view .study-image");
+    const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
+    const backBtn = document.getElementById("placeholder-back-button");
+
+    if (fireworksEl) {
+      fireworksEl.hidden = true;
+    }
+    if (homeBtn) {
+      homeBtn.hidden = true;
+    }
+    if (imageEl) {
+      imageEl.hidden = false;
+    }
+    if (voiceRow) {
+      voiceRow.hidden = false;
     }
 
-    completionEl.hidden = true;
-    setStudyContentHidden(false);
+    backBtn.hidden = false;
   }
 
   function ensureElements() {
@@ -146,7 +189,7 @@ const StudyPosition = (function () {
   function show(itemCount) {
     total = Number(itemCount) || 0;
     current = total > 0 ? 1 : 0;
-    ensureCompletionScreen();
+    ensureCompletionElements();
     restoreStudyScreen();
     render();
   }
@@ -155,8 +198,11 @@ const StudyPosition = (function () {
     if (rowEl) {
       rowEl.hidden = true;
     }
-    if (completionEl) {
-      completionEl.hidden = true;
+    if (fireworksEl) {
+      fireworksEl.hidden = true;
+    }
+    if (homeBtn) {
+      homeBtn.hidden = true;
     }
   }
 

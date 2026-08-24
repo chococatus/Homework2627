@@ -19,6 +19,7 @@ function hideAllViews() {
   ALL_VIEWS.forEach(function (view) {
     view.hide();
   });
+  StudyPosition.hide();
 }
 
 function navigateToHome(studentId) {
@@ -63,6 +64,7 @@ async function navigateToHomework(homework) {
 
   hideAllViews();
   PlaceholderView.show(homework, weekWords);
+  StudyPosition.show(weekWords.length);
 }
 
 // --- Wire up view callbacks ---

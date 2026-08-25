@@ -1,62 +1,51 @@
 Homework System
+
 v0.2: 학생 선택 화면
-
 v0.3: Home 화면
-
 v0.4: Google Sheets 연동
-
-v0.5: 단어 학습
-
-v0.6: 말하기 연습
-
-v1.0: 첫 배포
-
-
-Version 0.3
-
-✨ New
-- Home screen
-- Semester progress stars
-- Homework list
-- Published homework structure
-- Homework title support
-
-🔧 Improved
-- Start button now opens the Home screen.
-- Homework list sorted with the newest/current homework at the top.
-- Current homework displayed as the primary action instead of using a separate Start button.
-
-🐞 Fixed
-- Start button navigation
-- Local Storage verification
-
-📌 Known Issues
-- Google Sheets not connected yet.
-- Progress is still sample data.
-- Homework pages are not implemented.
-
-➡ Next Version (v0.4)
-- Google Sheets integration
-- Dynamic student list
-- Dynamic homework list
-- Dynamic progress
+v0.5: Speaking Study 완성
+v0.6: Week Section + Story + Quiz placeholder + navigation polish
+v0.7: Quiz
+v0.8: Progress
+v1.0: 첫 정식 배포
 
 
+Version 0.6
 
+✅ Week section menu
+- Story / Speaking Practice / Quiz 분리
+- story 데이터가 없는 주차에서는 Story 메뉴 숨김
 
-Version 0.2
+✅ Story
+- type = story 지원
+- 이미지 + 텍스트 + TTS 듣기
+- 이전/다음 이동
+- Google Sheets 셀 줄바꿈 유지
+- Speaking 기능과 완전히 분리
 
-✅ Student selection cards
-✅ Color/shape identity
-✅ Responsive layout
-✅ Local Storage structure
-✅ Welcome screen
+✅ Speaking Practice
+- 기존 v0.5 기능 유지
+- word / sentence만 필터링해서 표시
 
-Known Issues
-- Start button not working
-- Local Storage not yet verified
+✅ Quiz
+- v0.6에서는 placeholder만 연결
+- 실제 퀴즈 구현은 v0.7 예정
 
-Next Version (v0.3)
-- Fix Start button
-- Verify Local Storage
-- Week selection screen
+✅ Navigation / UI polish
+- 상단 '꾀꼬리반 숙제'를 Home 바로가기 버튼으로 변경
+- 학생 선택은 한 번 클릭/탭하면 즉시 진입
+- 체크마크 및 더블클릭 제거
+- 하단 Back 버튼은 한 단계 상위 메뉴로 이동
+- Week 메뉴 버튼 크기와 간격 정리
+
+✅ Deployment test
+- Netlify 배포 확인
+- 데스크탑 / 모바일 Chrome에서 기본 동작 확인
+- TTS / Speak / My Voice 모바일 동작 확인
+
+📌 v0.6 complete
+
+➡ Next Version (v0.7)
+- Quiz 구현
+- 우선 듣고 그림 고르기부터 시작
+- word / sentence 데이터 재사용

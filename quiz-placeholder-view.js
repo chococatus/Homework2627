@@ -55,11 +55,34 @@ const QuizPlaceholderView = (function () {
     });
   }
 
+  function shuffleItems(items) {
+    const shuffled = items.slice();
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+
+    return shuffled;
+  }
+
   function show(homework, quizItems) {
     createView();
     currentHomework = homework;
     titleEl.textContent = "Week " + homework.week + " · Quiz";
-    messageEl.textContent = "Quiz items loaded: " + quizItems.length;
+
+    const shuffledItems = shuffleItems(quizItems);
+    const firstItem = shuffledItems[0];
+
+    if (firstItem) {
+      messageEl.textContent = "1 / " + shuffledItems.length + " · " + firstItem.text;
+      console.log("[Quiz] shuffled first item:", firstItem);
+    } else {
+      messageEl.textContent = "No quiz items.";
+    }
+
     viewEl.hidden = false;
   }
 

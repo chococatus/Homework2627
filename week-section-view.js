@@ -17,6 +17,7 @@ const WeekSectionView = (function () {
 
   let onStoryCallback = null;
   let onSpeakingCallback = null;
+  let onQuizCallback = null;
   let onBackCallback = null;
 
   function createView() {
@@ -46,8 +47,6 @@ const WeekSectionView = (function () {
     quizButton.type = "button";
     quizButton.className = "btn btn--primary";
     quizButton.textContent = "🎯 퀴즈";
-    quizButton.disabled = true;
-    quizButton.title = "Coming soon";
 
     backButton = document.createElement("button");
     backButton.type = "button";
@@ -73,6 +72,12 @@ const WeekSectionView = (function () {
       }
     });
 
+    quizButton.addEventListener("click", function () {
+      if (onQuizCallback && currentHomework) {
+        onQuizCallback(currentHomework);
+      }
+    });
+
     backButton.addEventListener("click", function () {
       if (onBackCallback) {
         onBackCallback();
@@ -94,10 +99,11 @@ const WeekSectionView = (function () {
     }
   }
 
-  function init(onStory, onSpeaking, onBack) {
+  function init(onStory, onSpeaking, onQuiz, onBack) {
     createView();
     onStoryCallback = onStory;
     onSpeakingCallback = onSpeaking;
+    onQuizCallback = onQuiz;
     onBackCallback = onBack;
   }
 

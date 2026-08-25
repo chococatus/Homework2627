@@ -13,6 +13,7 @@ const PlaceholderView = (function () {
   let onBackCallback = null;
   let items = [];
   let currentIndex = 0;
+  let currentHomework = null;
   let imageEl = null;
   let imageRowEl = null;
   let prevBtn = null;
@@ -502,6 +503,7 @@ const PlaceholderView = (function () {
   }
 
   function show(homework, weekItems) {
+    currentHomework = homework;
     items = Array.isArray(weekItems) ? weekItems : [];
     currentIndex = 0;
     clearTemporaryRecording();
@@ -534,8 +536,8 @@ const PlaceholderView = (function () {
     onBackCallback = onBack;
 
     backBtn.addEventListener("click", function () {
-      if (onBackCallback) {
-        onBackCallback();
+      if (onBackCallback && currentHomework) {
+        onBackCallback(currentHomework);
       }
     });
   }

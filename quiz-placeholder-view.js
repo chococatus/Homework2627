@@ -10,9 +10,12 @@ const QuizPlaceholderView = (function () {
   let viewEl = null;
   let titleEl = null;
   let messageEl = null;
+  let choicesEl = null;
+  let listenBtn = null;
   let backBtn = null;
   let currentHomework = null;
   let onBackCallback = null;
+  let currentQuestion = null;
 
   function createView() {
     if (viewEl) {
@@ -35,7 +38,20 @@ const QuizPlaceholderView = (function () {
     messageEl = document.createElement("p");
     messageEl.className = "placeholder-message";
     messageEl.style.fontSize = "1.25rem";
-    messageEl.style.marginBottom = "2rem";
+    messageEl.style.marginBottom = "1rem";
+
+    listenBtn = document.createElement("button");
+    listenBtn.type = "button";
+    listenBtn.className = "btn btn--primary";
+    listenBtn.textContent = "🔊 Listen";
+    listenBtn.hidden = true;
+
+    choicesEl = document.createElement("div");
+    choicesEl.style.display = "flex";
+    choicesEl.style.gap = "1rem";
+    choicesEl.style.justifyContent = "center";
+    choicesEl.style.flexWrap = "wrap";
+    choicesEl.style.margin = "1.5rem 0 2rem";
 
     backBtn = document.createElement("button");
     backBtn.type = "button";
@@ -45,8 +61,36 @@ const QuizPlaceholderView = (function () {
     viewEl.appendChild(titleEl);
     viewEl.appendChild(icon);
     viewEl.appendChild(messageEl);
+    viewEl.appendChild(listenBtn);
+    viewEl.appendChild(choicesEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
+
+    listenBtn.addEventListener("click", function () {
+      if (!currentQuestion || currentQuestion.questionType !== "listening") {
+        return;
+      }
+
+      if (!("speechSynthesis" in window)) {
+        console.error("[Quiz TTS] speechSynthesis is not supported in this browser.");
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(currentQuestion.item.text);
+      const koreanVoice = window.speechSynthesis.getVoices().find(function (voice) {
+        return voice.lang && voice.lang.toLowerCase().startsWith("ko");
+      }) || null;
+
+      utterance.lang = "ko-KR";
+      if (koreanVoice) {
+        utterance.voice = koreanVoice;
+      }
+
+      window.speechSynthesis.cancel();
+      setTimeout(function () {
+        window.speechSynthesis.speak(utterance);
+      }, 50);
+    });
 
     backBtn.addEventListener("click", function () {
       if (onBackCallback && currentHomework) {
@@ -79,6 +123,53 @@ const QuizPlaceholderView = (function () {
     });
   }
 
+  function getListeningChoices(correctItem, allItems) {
+    const otherItems = shuffleItems(allItems.filter(function (item) {
+      return item !== correctItem && item.image;
+    })).slice(0, 2);
+
+    return shuffleItems([correctItem].concat(otherItems));
+  }
+
+  function renderListeningQuestion(question, allItems, questionCount) {
+    messageEl.textContent = "1 / " + questionCount + " · Listen and choose the picture.";
+    listenBtn.hidden = false;
+    choicesEl.innerHTML = "";
+
+    const choices = getListeningChoices(question.item, allItems);
+
+    choices.forEach(function (item) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.style.border = "1px solid #ddd";
+      button.style.borderRadius = "12px";
+      button.style.background = "white";
+      button.style.padding = "0.5rem";
+      button.style.cursor = "pointer";
+
+      const image = document.createElement("img");
+      image.src = "assets/images/" + item.image;
+      image.alt = "Quiz choice";
+      image.style.width = "150px";
+      image.style.height = "150px";
+      image.style.objectFit = "contain";
+      image.style.display = "block";
+
+      button.appendChild(image);
+      choicesEl.appendChild(button);
+    });
+
+    console.log("[Quiz] listening choices:", choices);
+  }
+
+  function renderSpeakingPlaceholder(question, questionCount) {
+    listenBtn.hidden = true;
+    choicesEl.innerHTML = "";
+    messageEl.textContent =
+      "1 / " + questionCount +
+      " · speaking · " + question.item.text;
+  }
+
   function show(homework, quizItems) {
     createView();
     currentHomework = homework;
@@ -86,16 +177,19 @@ const QuizPlaceholderView = (function () {
 
     const shuffledItems = shuffleItems(quizItems);
     const quizQuestions = assignQuestionTypes(shuffledItems);
-    const firstQuestion = quizQuestions[0];
+    currentQuestion = quizQuestions[0] || null;
 
-    if (firstQuestion) {
-      messageEl.textContent =
-        "1 / " + quizQuestions.length +
-        " · " + firstQuestion.questionType +
-        " · " + firstQuestion.item.text;
+    if (currentQuestion) {
+      if (currentQuestion.questionType === "listening") {
+        renderListeningQuestion(currentQuestion, quizItems, quizQuestions.length);
+      } else {
+        renderSpeakingPlaceholder(currentQuestion, quizQuestions.length);
+      }
 
       console.log("[Quiz] questions:", quizQuestions);
     } else {
+      listenBtn.hidden = true;
+      choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
     }
 

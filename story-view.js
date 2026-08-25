@@ -89,7 +89,7 @@ const StoryView = (function () {
     imageRowEl.appendChild(nextBtn);
 
     textEl = document.createElement("p");
-    textEl.className = "study-text";
+    textEl.className = "study-text story-text";
 
     listenBtn = document.createElement("button");
     listenBtn.type = "button";

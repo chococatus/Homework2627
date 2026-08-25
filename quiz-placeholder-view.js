@@ -1,7 +1,7 @@
 /**
  * Quiz Placeholder View
  * ---------------------
- * Temporary screen for v0.6. Actual quiz gameplay comes later.
+ * Temporary screen while v0.7 quiz gameplay is built step by step.
  */
 
 const QuizPlaceholderView = (function () {
@@ -9,6 +9,7 @@ const QuizPlaceholderView = (function () {
 
   let viewEl = null;
   let titleEl = null;
+  let messageEl = null;
   let backBtn = null;
   let currentHomework = null;
   let onBackCallback = null;
@@ -31,11 +32,10 @@ const QuizPlaceholderView = (function () {
     icon.style.fontSize = "4rem";
     icon.style.marginBottom = "1rem";
 
-    const message = document.createElement("p");
-    message.className = "placeholder-message";
-    message.textContent = "Quiz coming soon!";
-    message.style.fontSize = "1.25rem";
-    message.style.marginBottom = "2rem";
+    messageEl = document.createElement("p");
+    messageEl.className = "placeholder-message";
+    messageEl.style.fontSize = "1.25rem";
+    messageEl.style.marginBottom = "2rem";
 
     backBtn = document.createElement("button");
     backBtn.type = "button";
@@ -44,7 +44,7 @@ const QuizPlaceholderView = (function () {
 
     viewEl.appendChild(titleEl);
     viewEl.appendChild(icon);
-    viewEl.appendChild(message);
+    viewEl.appendChild(messageEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
@@ -55,10 +55,11 @@ const QuizPlaceholderView = (function () {
     });
   }
 
-  function show(homework) {
+  function show(homework, quizItems) {
     createView();
     currentHomework = homework;
     titleEl.textContent = "Week " + homework.week + " · Quiz";
+    messageEl.textContent = "Quiz items loaded: " + quizItems.length;
     viewEl.hidden = false;
   }
 

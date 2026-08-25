@@ -13,6 +13,7 @@ const ALL_VIEWS = [
   WelcomeView,
   HomeView,
   WeekSectionView,
+  StoryView,
   PlaceholderView,
 ];
 
@@ -62,6 +63,25 @@ async function navigateToWeekSection(homework) {
   WeekSectionView.show(homework, hasStory);
 }
 
+async function navigateToStory(homework) {
+  await loadWordsData();
+
+  const storyItems = getWordsByWeek(homework.week).filter(function (item) {
+    return item.type === "story";
+  });
+
+  console.log(
+    "[Story] week:",
+    homework.week,
+    "items:",
+    storyItems.length,
+    storyItems
+  );
+
+  hideAllViews();
+  StoryView.show(homework, storyItems);
+}
+
 async function navigateToSpeaking(homework) {
   await loadWordsData();
 
@@ -91,7 +111,7 @@ WelcomeView.init(navigateToHome, navigateToSelection);
 HomeView.init(navigateToWeekSection, navigateToSelection);
 
 WeekSectionView.init(
-  null,
+  navigateToStory,
   navigateToSpeaking,
   function () {
     const savedId = getSavedStudentId();
@@ -102,6 +122,10 @@ WeekSectionView.init(
     }
   }
 );
+
+StoryView.init(function (homework) {
+  navigateToWeekSection(homework);
+});
 
 PlaceholderView.init(function () {
   const savedId = getSavedStudentId();

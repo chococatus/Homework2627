@@ -68,17 +68,33 @@ const QuizPlaceholderView = (function () {
     return shuffled;
   }
 
+  function assignQuestionTypes(items) {
+    const listeningCount = Math.round(items.length * 2 / 3);
+
+    return items.map(function (item, index) {
+      return {
+        item: item,
+        questionType: index < listeningCount ? "listening" : "speaking",
+      };
+    });
+  }
+
   function show(homework, quizItems) {
     createView();
     currentHomework = homework;
     titleEl.textContent = "Week " + homework.week + " · Quiz";
 
     const shuffledItems = shuffleItems(quizItems);
-    const firstItem = shuffledItems[0];
+    const quizQuestions = assignQuestionTypes(shuffledItems);
+    const firstQuestion = quizQuestions[0];
 
-    if (firstItem) {
-      messageEl.textContent = "1 / " + shuffledItems.length + " · " + firstItem.text;
-      console.log("[Quiz] shuffled first item:", firstItem);
+    if (firstQuestion) {
+      messageEl.textContent =
+        "1 / " + quizQuestions.length +
+        " · " + firstQuestion.questionType +
+        " · " + firstQuestion.item.text;
+
+      console.log("[Quiz] questions:", quizQuestions);
     } else {
       messageEl.textContent = "No quiz items.";
     }

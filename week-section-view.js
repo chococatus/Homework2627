@@ -44,7 +44,7 @@ const WeekSectionView = (function () {
 
     quizButton = document.createElement("button");
     quizButton.type = "button";
-    quizButton.className = "btn btn--secondary";
+    quizButton.className = "btn btn--primary";
     quizButton.textContent = "🎯 퀴즈";
     quizButton.disabled = true;
     quizButton.title = "Coming soon";

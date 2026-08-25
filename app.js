@@ -103,9 +103,23 @@ async function navigateToSpeaking(homework) {
   StudyPosition.show(speakingItems.length);
 }
 
-function navigateToQuiz(homework) {
+async function navigateToQuiz(homework) {
+  await loadWordsData();
+
+  const quizItems = getWordsByWeek(homework.week).filter(function (item) {
+    return item.type === "word" || item.type === "sentence";
+  });
+
+  console.log(
+    "[Quiz] week:",
+    homework.week,
+    "items:",
+    quizItems.length,
+    quizItems
+  );
+
   hideAllViews();
-  QuizPlaceholderView.show(homework);
+  QuizPlaceholderView.show(homework, quizItems);
 }
 
 function navigateToSavedStudentHome() {

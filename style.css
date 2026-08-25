@@ -49,18 +49,23 @@ body {
   z-index: 10;
 }
 
-.site-header__org {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.site-home-button {
+  border: none;
+  background: transparent;
   color: var(--color-text-muted);
-  text-transform: uppercase;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background-color var(--transition);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.site-header__class {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-top: 0.15rem;
+.site-home-button:hover {
+  color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.65);
 }
 
 .page {
@@ -124,40 +129,10 @@ body {
   box-shadow: 0 6px 28px rgba(124, 156, 255, 0.2);
 }
 
-.student-card.is-selected {
-  border-color: var(--color-selected);
-  transform: scale(1.05);
-  box-shadow: 0 6px 28px rgba(124, 156, 255, 0.3);
-}
-
 .student-name {
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.student-card__check {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 50%;
-  font-size: 0.85rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: scale(0.5);
-  transition: opacity var(--transition), transform var(--transition);
-}
-
-.student-card.is-selected .student-card__check {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .shape-icon {

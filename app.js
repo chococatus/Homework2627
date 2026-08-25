@@ -12,6 +12,7 @@ const ALL_VIEWS = [
   SelectionView,
   WelcomeView,
   HomeView,
+  WeekSectionView,
   PlaceholderView,
 ];
 
@@ -49,22 +50,36 @@ function navigateToWelcome(studentId) {
   WelcomeView.show(student);
 }
 
-async function navigateToHomework(homework) {
+async function navigateToWeekSection(homework) {
   await loadWordsData();
 
-  const weekWords = getWordsByWeek(homework.week);
+  const weekItems = getWordsByWeek(homework.week);
+  const hasStory = weekItems.some(function (item) {
+    return item.type === "story";
+  });
+
+  hideAllViews();
+  WeekSectionView.show(homework, hasStory);
+}
+
+async function navigateToSpeaking(homework) {
+  await loadWordsData();
+
+  const speakingItems = getWordsByWeek(homework.week).filter(function (item) {
+    return item.type === "word" || item.type === "sentence";
+  });
 
   console.log(
-    "[Homework Words] week:",
+    "[Speaking Practice] week:",
     homework.week,
     "items:",
-    weekWords.length,
-    weekWords
+    speakingItems.length,
+    speakingItems
   );
 
   hideAllViews();
-  PlaceholderView.show(homework, weekWords);
-  StudyPosition.show(weekWords.length);
+  PlaceholderView.show(homework, speakingItems);
+  StudyPosition.show(speakingItems.length);
 }
 
 // --- Wire up view callbacks ---
@@ -73,7 +88,20 @@ SelectionView.init(navigateToHome);
 
 WelcomeView.init(navigateToHome, navigateToSelection);
 
-HomeView.init(navigateToHomework, navigateToSelection);
+HomeView.init(navigateToWeekSection, navigateToSelection);
+
+WeekSectionView.init(
+  null,
+  navigateToSpeaking,
+  function () {
+    const savedId = getSavedStudentId();
+    if (savedId) {
+      navigateToHome(savedId);
+    } else {
+      navigateToSelection();
+    }
+  }
+);
 
 PlaceholderView.init(function () {
   const savedId = getSavedStudentId();

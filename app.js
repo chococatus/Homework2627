@@ -108,6 +108,17 @@ function navigateToQuiz(homework) {
   QuizPlaceholderView.show(homework);
 }
 
+function navigateToSavedStudentHome() {
+  const savedId = getSavedStudentId();
+
+  if (savedId && getStudentById(savedId)) {
+    navigateToHome(savedId);
+  } else {
+    hideAllViews();
+    SelectionView.show();
+  }
+}
+
 // --- Wire up view callbacks ---
 
 SelectionView.init(navigateToHome);
@@ -120,14 +131,7 @@ WeekSectionView.init(
   navigateToStory,
   navigateToSpeaking,
   navigateToQuiz,
-  function () {
-    const savedId = getSavedStudentId();
-    if (savedId) {
-      navigateToHome(savedId);
-    } else {
-      navigateToSelection();
-    }
-  }
+  navigateToSavedStudentHome
 );
 
 StoryView.init(function (homework) {
@@ -138,14 +142,12 @@ QuizPlaceholderView.init(function (homework) {
   navigateToWeekSection(homework);
 });
 
-PlaceholderView.init(function () {
-  const savedId = getSavedStudentId();
-  if (savedId) {
-    navigateToHome(savedId);
-  } else {
-    navigateToSelection();
-  }
+PlaceholderView.init(function (homework) {
+  navigateToWeekSection(homework);
 });
+
+const siteHomeButton = document.getElementById("site-home-button");
+siteHomeButton.addEventListener("click", navigateToSavedStudentHome);
 
 // --- App startup ---
 

@@ -99,7 +99,7 @@ const StoryView = (function () {
     backBtn = document.createElement("button");
     backBtn.type = "button";
     backBtn.className = "btn btn--secondary";
-    backBtn.textContent = "Back to Week Menu";
+    backBtn.textContent = "Back";
     backBtn.style.marginTop = "1rem";
 
     viewEl.appendChild(titleEl);

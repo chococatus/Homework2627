@@ -14,6 +14,7 @@ const ALL_VIEWS = [
   HomeView,
   WeekSectionView,
   StoryView,
+  QuizPlaceholderView,
   PlaceholderView,
 ];
 
@@ -102,6 +103,11 @@ async function navigateToSpeaking(homework) {
   StudyPosition.show(speakingItems.length);
 }
 
+function navigateToQuiz(homework) {
+  hideAllViews();
+  QuizPlaceholderView.show(homework);
+}
+
 // --- Wire up view callbacks ---
 
 SelectionView.init(navigateToHome);
@@ -113,6 +119,7 @@ HomeView.init(navigateToWeekSection, navigateToSelection);
 WeekSectionView.init(
   navigateToStory,
   navigateToSpeaking,
+  navigateToQuiz,
   function () {
     const savedId = getSavedStudentId();
     if (savedId) {
@@ -124,6 +131,10 @@ WeekSectionView.init(
 );
 
 StoryView.init(function (homework) {
+  navigateToWeekSection(homework);
+});
+
+QuizPlaceholderView.init(function (homework) {
   navigateToWeekSection(homework);
 });
 

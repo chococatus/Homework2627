@@ -319,6 +319,10 @@ body {
   margin-bottom: 1rem;
 }
 
+.story-text {
+  white-space: pre-line;
+}
+
 .study-image-row {
   display: grid;
   grid-template-columns: 56px 320px 56px;

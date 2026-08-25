@@ -40,7 +40,7 @@ const QuizPlaceholderView = (function () {
     backBtn = document.createElement("button");
     backBtn.type = "button";
     backBtn.className = "btn btn--secondary";
-    backBtn.textContent = "Back to Week Menu";
+    backBtn.textContent = "Back";
 
     viewEl.appendChild(titleEl);
     viewEl.appendChild(icon);

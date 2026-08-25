@@ -51,7 +51,7 @@ const WeekSectionView = (function () {
     backButton = document.createElement("button");
     backButton.type = "button";
     backButton.className = "btn btn--secondary";
-    backButton.textContent = "Back to Home";
+    backButton.textContent = "Back";
 
     viewEl.appendChild(titleEl);
     viewEl.appendChild(storyButton);

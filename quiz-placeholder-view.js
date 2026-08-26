@@ -15,7 +15,9 @@ const QuizPlaceholderView = (function () {
   let choicesWrapEl = null;
   let choicesEl = null;
   let listenBtn = null;
+  let prevBtn = null;
   let nextBtn = null;
+  let navRowEl = null;
   let backBtn = null;
   let currentHomework = null;
   let onBackCallback = null;
@@ -89,11 +91,24 @@ const QuizPlaceholderView = (function () {
     choicesWrapEl.appendChild(resultEl);
     choicesWrapEl.appendChild(choicesEl);
 
+    navRowEl = document.createElement("div");
+    navRowEl.style.display = "flex";
+    navRowEl.style.justifyContent = "center";
+    navRowEl.style.gap = "0.75rem";
+    navRowEl.style.marginBottom = "1rem";
+
+    prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "btn btn--secondary";
+    prevBtn.textContent = "Prev";
+
     nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "btn btn--primary";
     nextBtn.textContent = "Next";
-    nextBtn.hidden = true;
+
+    navRowEl.appendChild(prevBtn);
+    navRowEl.appendChild(nextBtn);
 
     backBtn = document.createElement("button");
     backBtn.type = "button";
@@ -103,7 +118,7 @@ const QuizPlaceholderView = (function () {
     viewEl.appendChild(titleEl);
     viewEl.appendChild(promptRowEl);
     viewEl.appendChild(choicesWrapEl);
-    viewEl.appendChild(nextBtn);
+    viewEl.appendChild(navRowEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
@@ -131,6 +146,15 @@ const QuizPlaceholderView = (function () {
       setTimeout(function () {
         window.speechSynthesis.speak(utterance);
       }, 50);
+    });
+
+    prevBtn.addEventListener("click", function () {
+      if (currentIndex <= 0) {
+        return;
+      }
+
+      currentIndex -= 1;
+      renderCurrentQuestion();
     });
 
     nextBtn.addEventListener("click", function () {
@@ -194,7 +218,6 @@ const QuizPlaceholderView = (function () {
     resultEl.hidden = true;
     resultEl.textContent = "";
     listenBtn.hidden = false;
-    nextBtn.hidden = true;
     choicesEl.innerHTML = "";
 
     const choices = getListeningChoices(question.item, quizItems);
@@ -249,8 +272,6 @@ const QuizPlaceholderView = (function () {
             choiceButton.disabled = true;
             choiceButton.style.cursor = "default";
           });
-
-          nextBtn.hidden = currentIndex === quizQuestions.length - 1;
         } else {
           button.style.border = "3px solid #c62828";
           showResult("Try again.", "#c62828");
@@ -263,7 +284,6 @@ const QuizPlaceholderView = (function () {
 
   function renderSpeakingPlaceholder(question) {
     listenBtn.hidden = true;
-    nextBtn.hidden = true;
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
@@ -272,16 +292,22 @@ const QuizPlaceholderView = (function () {
       " · speaking · " + question.item.text;
   }
 
+  function updateNavigationButtons() {
+    prevBtn.hidden = currentIndex === 0;
+    nextBtn.hidden = currentIndex === quizQuestions.length - 1;
+  }
+
   function renderCurrentQuestion() {
     currentQuestion = quizQuestions[currentIndex] || null;
 
     if (!currentQuestion) {
       listenBtn.hidden = true;
-      nextBtn.hidden = true;
       resultEl.hidden = true;
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
+      prevBtn.hidden = true;
+      nextBtn.hidden = true;
       return;
     }
 
@@ -290,6 +316,8 @@ const QuizPlaceholderView = (function () {
     } else {
       renderSpeakingPlaceholder(currentQuestion);
     }
+
+    updateNavigationButtons();
   }
 
   function show(homework, items) {

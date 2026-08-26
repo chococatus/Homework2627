@@ -124,6 +124,8 @@ const QuizPlaceholderView = (function () {
     backBtn.type = "button";
     backBtn.className = "btn btn--secondary";
     backBtn.textContent = "Back";
+    backBtn.style.width = "100%";
+    backBtn.style.maxWidth = "360px";
 
     viewEl.appendChild(titleEl);
     viewEl.appendChild(promptRowEl);
@@ -312,10 +314,12 @@ const QuizPlaceholderView = (function () {
     const isFirst = currentIndex === 0;
     const isLast = currentIndex === quizQuestions.length - 1;
 
-    prevBtn.style.visibility = isFirst ? "hidden" : "visible";
+    prevBtn.style.opacity = isFirst ? "0" : "1";
+    prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
     prevBtn.disabled = isFirst;
 
-    nextBtn.style.visibility = isLast ? "hidden" : "visible";
+    nextBtn.style.opacity = isLast ? "0" : "1";
+    nextBtn.style.pointerEvents = isLast ? "none" : "auto";
     if (isLast) {
       nextBtn.disabled = true;
     }
@@ -329,9 +333,11 @@ const QuizPlaceholderView = (function () {
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
-      prevBtn.style.visibility = "hidden";
+      prevBtn.style.opacity = "0";
+      prevBtn.style.pointerEvents = "none";
       listenBtn.style.visibility = "hidden";
-      nextBtn.style.visibility = "hidden";
+      nextBtn.style.opacity = "0";
+      nextBtn.style.pointerEvents = "none";
       return;
     }
 

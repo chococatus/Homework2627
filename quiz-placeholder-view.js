@@ -9,18 +9,17 @@ const QuizPlaceholderView = (function () {
 
   let viewEl = null;
   let titleEl = null;
-  let promptRowEl = null;
   let messageEl = null;
   let resultEl = null;
   let choicesWrapEl = null;
   let choicesEl = null;
+  let speakingResultEl = null;
+  let centerControlsEl = null;
   let listenBtn = null;
-  let speakingActionsEl = null;
   let speakBtn = null;
   let helpListenBtn = null;
   let prevBtn = null;
   let nextBtn = null;
-  let navRowEl = null;
   let progressRowEl = null;
   let progressFillEl = null;
   let progressCountEl = null;
@@ -47,7 +46,7 @@ const QuizPlaceholderView = (function () {
     titleEl = document.createElement("h1");
     titleEl.className = "study-week-label";
 
-    promptRowEl = document.createElement("div");
+    const promptRowEl = document.createElement("div");
     promptRowEl.style.display = "flex";
     promptRowEl.style.alignItems = "center";
     promptRowEl.style.justifyContent = "center";
@@ -89,25 +88,11 @@ const QuizPlaceholderView = (function () {
     choicesWrapEl.appendChild(resultEl);
     choicesWrapEl.appendChild(choicesEl);
 
-    speakingActionsEl = document.createElement("div");
-    speakingActionsEl.className = "study-voice-row";
-    speakingActionsEl.hidden = true;
+    speakingResultEl = document.createElement("div");
+    speakingResultEl.className = "study-recognition-result";
+    speakingResultEl.hidden = true;
 
-    speakBtn = document.createElement("button");
-    speakBtn.type = "button";
-    speakBtn.className = "study-recognition-button";
-    speakBtn.textContent = "🎤 Speak";
-
-    helpListenBtn = document.createElement("button");
-    helpListenBtn.type = "button";
-    helpListenBtn.className = "study-speak-button";
-    helpListenBtn.textContent = "🔊 Listen";
-    helpListenBtn.hidden = true;
-
-    speakingActionsEl.appendChild(speakBtn);
-    speakingActionsEl.appendChild(helpListenBtn);
-
-    navRowEl = document.createElement("div");
+    const navRowEl = document.createElement("div");
     navRowEl.style.display = "grid";
     navRowEl.style.gridTemplateColumns = "56px minmax(0, auto) 56px";
     navRowEl.style.alignItems = "center";
@@ -123,10 +108,32 @@ const QuizPlaceholderView = (function () {
     prevBtn.textContent = "<";
     prevBtn.setAttribute("aria-label", "Previous quiz question");
 
+    centerControlsEl = document.createElement("div");
+    centerControlsEl.style.display = "flex";
+    centerControlsEl.style.justifyContent = "center";
+    centerControlsEl.style.alignItems = "center";
+    centerControlsEl.style.gap = "0.5rem";
+
     listenBtn = document.createElement("button");
     listenBtn.type = "button";
     listenBtn.className = "study-speak-button";
     listenBtn.textContent = "🔊 Listen";
+
+    speakBtn = document.createElement("button");
+    speakBtn.type = "button";
+    speakBtn.className = "study-recognition-button";
+    speakBtn.textContent = "🎤 Speak";
+    speakBtn.hidden = true;
+
+    helpListenBtn = document.createElement("button");
+    helpListenBtn.type = "button";
+    helpListenBtn.className = "study-speak-button";
+    helpListenBtn.textContent = "🔊 Listen";
+    helpListenBtn.hidden = true;
+
+    centerControlsEl.appendChild(listenBtn);
+    centerControlsEl.appendChild(speakBtn);
+    centerControlsEl.appendChild(helpListenBtn);
 
     nextBtn = document.createElement("button");
     nextBtn.type = "button";
@@ -135,7 +142,7 @@ const QuizPlaceholderView = (function () {
     nextBtn.setAttribute("aria-label", "Next quiz question");
 
     navRowEl.appendChild(prevBtn);
-    navRowEl.appendChild(listenBtn);
+    navRowEl.appendChild(centerControlsEl);
     navRowEl.appendChild(nextBtn);
 
     progressRowEl = document.createElement("div");
@@ -162,7 +169,7 @@ const QuizPlaceholderView = (function () {
     viewEl.appendChild(titleEl);
     viewEl.appendChild(promptRowEl);
     viewEl.appendChild(choicesWrapEl);
-    viewEl.appendChild(speakingActionsEl);
+    viewEl.appendChild(speakingResultEl);
     viewEl.appendChild(navRowEl);
     viewEl.appendChild(progressRowEl);
     viewEl.appendChild(backBtn);
@@ -271,10 +278,48 @@ const QuizPlaceholderView = (function () {
       .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
   }
 
+  function cleanDisplayTranscript(text) {
+    return String(text || "")
+      .normalize("NFC")
+      .replace(/[.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function showResult(text, color) {
     resultEl.textContent = text;
     resultEl.style.color = color;
     resultEl.hidden = false;
+  }
+
+  function showSpeakingTranscript(transcript, isMatch) {
+    speakingResultEl.innerHTML = "";
+    speakingResultEl.hidden = false;
+    speakingResultEl.classList.toggle("is-match", isMatch);
+    speakingResultEl.classList.toggle("needs-practice", !isMatch);
+
+    const line = document.createElement("p");
+    line.className = "study-result-line";
+
+    const label = document.createElement("span");
+    label.className = "study-result-label";
+    label.textContent = "I heard: ";
+    line.appendChild(label);
+
+    const heard = document.createElement("span");
+    heard.textContent = cleanDisplayTranscript(transcript);
+    heard.className = isMatch ? "study-result-match" : "study-result-mismatch";
+    line.appendChild(heard);
+
+    if (isMatch) {
+      const icon = document.createElement("span");
+      icon.className = "study-result-success-icon";
+      icon.textContent = " ✓";
+      icon.setAttribute("aria-label", "Correct");
+      line.appendChild(icon);
+    }
+
+    speakingResultEl.appendChild(line);
   }
 
   function renderProgress() {
@@ -330,10 +375,14 @@ const QuizPlaceholderView = (function () {
     messageEl.textContent = "Listen and choose the matching picture.";
     resultEl.hidden = true;
     resultEl.textContent = "";
+    speakingResultEl.hidden = true;
+    speakingResultEl.innerHTML = "";
     choicesEl.innerHTML = "";
-    speakingActionsEl.hidden = true;
-    listenBtn.style.visibility = "visible";
+
+    listenBtn.hidden = false;
     listenBtn.disabled = false;
+    speakBtn.hidden = true;
+    helpListenBtn.hidden = true;
     nextBtn.disabled = true;
 
     const choices = getListeningChoices(question.item, quizItems);
@@ -357,7 +406,6 @@ const QuizPlaceholderView = (function () {
       while (card.firstChild) {
         button.appendChild(card.firstChild);
       }
-
       choicesEl.appendChild(button);
 
       button.addEventListener("click", function () {
@@ -382,17 +430,18 @@ const QuizPlaceholderView = (function () {
     messageEl.textContent = "Look at the picture and say it.";
     resultEl.hidden = true;
     resultEl.textContent = "";
+    speakingResultEl.hidden = true;
+    speakingResultEl.innerHTML = "";
     choicesEl.innerHTML = "";
     choicesEl.appendChild(createQuizCard(question.item));
 
     speakingAttemptStarted = false;
-    speakingActionsEl.hidden = false;
+    listenBtn.hidden = true;
+    listenBtn.disabled = true;
+    speakBtn.hidden = false;
     speakBtn.textContent = "🎤 Speak";
     speakBtn.disabled = !getSpeechRecognitionConstructor();
     helpListenBtn.hidden = true;
-
-    listenBtn.style.visibility = "hidden";
-    listenBtn.disabled = true;
     nextBtn.disabled = true;
   }
 
@@ -427,6 +476,7 @@ const QuizPlaceholderView = (function () {
         const isMatch = target === heard;
 
         console.log("[Quiz Speech] result:", transcript);
+        showSpeakingTranscript(transcript, isMatch);
 
         if (isMatch) {
           showResult("✓ Correct!", "#2e7d32");
@@ -452,6 +502,8 @@ const QuizPlaceholderView = (function () {
 
     resultEl.hidden = true;
     resultEl.textContent = "";
+    speakingResultEl.hidden = true;
+    speakingResultEl.innerHTML = "";
     helpListenBtn.hidden = true;
 
     try {
@@ -488,11 +540,14 @@ const QuizPlaceholderView = (function () {
     if (!currentQuestion) {
       resultEl.hidden = true;
       resultEl.textContent = "";
+      speakingResultEl.hidden = true;
+      speakingResultEl.innerHTML = "";
       choicesEl.innerHTML = "";
-      speakingActionsEl.hidden = true;
       messageEl.textContent = "No quiz items.";
       prevBtn.hidden = true;
-      listenBtn.style.visibility = "hidden";
+      listenBtn.hidden = true;
+      speakBtn.hidden = true;
+      helpListenBtn.hidden = true;
       nextBtn.hidden = true;
       progressRowEl.hidden = true;
       return;

@@ -15,6 +15,9 @@ const QuizPlaceholderView = (function () {
   let choicesWrapEl = null;
   let choicesEl = null;
   let listenBtn = null;
+  let speakingActionsEl = null;
+  let speakBtn = null;
+  let helpListenBtn = null;
   let prevBtn = null;
   let nextBtn = null;
   let navRowEl = null;
@@ -28,6 +31,8 @@ const QuizPlaceholderView = (function () {
   let currentIndex = 0;
   let quizQuestions = [];
   let quizItems = [];
+  let recognition = null;
+  let speakingAttemptStarted = false;
 
   function createView() {
     if (viewEl) {
@@ -53,12 +58,11 @@ const QuizPlaceholderView = (function () {
     messageEl.className = "placeholder-message";
     messageEl.style.fontSize = "1.25rem";
     messageEl.style.margin = "0";
-
     promptRowEl.appendChild(messageEl);
 
     choicesWrapEl = document.createElement("div");
     choicesWrapEl.style.position = "relative";
-    choicesWrapEl.style.margin = "1rem 0 1.5rem";
+    choicesWrapEl.style.margin = "1rem 0 1.25rem";
 
     resultEl = document.createElement("p");
     resultEl.style.position = "absolute";
@@ -84,6 +88,24 @@ const QuizPlaceholderView = (function () {
 
     choicesWrapEl.appendChild(resultEl);
     choicesWrapEl.appendChild(choicesEl);
+
+    speakingActionsEl = document.createElement("div");
+    speakingActionsEl.className = "study-voice-row";
+    speakingActionsEl.hidden = true;
+
+    speakBtn = document.createElement("button");
+    speakBtn.type = "button";
+    speakBtn.className = "study-recognition-button";
+    speakBtn.textContent = "🎤 Speak";
+
+    helpListenBtn = document.createElement("button");
+    helpListenBtn.type = "button";
+    helpListenBtn.className = "study-speak-button";
+    helpListenBtn.textContent = "🔊 Listen";
+    helpListenBtn.hidden = true;
+
+    speakingActionsEl.appendChild(speakBtn);
+    speakingActionsEl.appendChild(helpListenBtn);
 
     navRowEl = document.createElement("div");
     navRowEl.style.display = "grid";
@@ -140,42 +162,30 @@ const QuizPlaceholderView = (function () {
     viewEl.appendChild(titleEl);
     viewEl.appendChild(promptRowEl);
     viewEl.appendChild(choicesWrapEl);
+    viewEl.appendChild(speakingActionsEl);
     viewEl.appendChild(navRowEl);
     viewEl.appendChild(progressRowEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
     listenBtn.addEventListener("click", function () {
-      if (!currentQuestion || currentQuestion.questionType !== "listening") {
-        return;
+      if (currentQuestion && currentQuestion.questionType === "listening") {
+        speakText(currentQuestion.item.text);
       }
-
-      if (!("speechSynthesis" in window)) {
-        console.error("[Quiz TTS] speechSynthesis is not supported in this browser.");
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(currentQuestion.item.text);
-      const koreanVoice = window.speechSynthesis.getVoices().find(function (voice) {
-        return voice.lang && voice.lang.toLowerCase().startsWith("ko");
-      }) || null;
-
-      utterance.lang = "ko-KR";
-      if (koreanVoice) {
-        utterance.voice = koreanVoice;
-      }
-
-      window.speechSynthesis.cancel();
-      setTimeout(function () {
-        window.speechSynthesis.speak(utterance);
-      }, 50);
     });
+
+    helpListenBtn.addEventListener("click", function () {
+      if (currentQuestion && currentQuestion.questionType === "speaking") {
+        speakText(currentQuestion.item.text);
+      }
+    });
+
+    speakBtn.addEventListener("click", startSpeakingRecognition);
 
     prevBtn.addEventListener("click", function () {
       if (currentIndex <= 0) {
         return;
       }
-
       currentIndex -= 1;
       renderCurrentQuestion();
     });
@@ -184,7 +194,6 @@ const QuizPlaceholderView = (function () {
       if (nextBtn.disabled || currentIndex >= quizQuestions.length - 1) {
         return;
       }
-
       currentIndex += 1;
       renderCurrentQuestion();
     });
@@ -198,20 +207,17 @@ const QuizPlaceholderView = (function () {
 
   function shuffleItems(items) {
     const shuffled = items.slice();
-
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       const temp = shuffled[i];
       shuffled[i] = shuffled[j];
       shuffled[j] = temp;
     }
-
     return shuffled;
   }
 
   function assignQuestionTypes(items) {
     const listeningCount = Math.round(items.length * 2 / 3);
-
     return items.map(function (item, index) {
       return {
         item: item,
@@ -224,8 +230,45 @@ const QuizPlaceholderView = (function () {
     const otherItems = shuffleItems(allItems.filter(function (item) {
       return item !== correctItem && item.image;
     })).slice(0, 2);
-
     return shuffleItems([correctItem].concat(otherItems));
+  }
+
+  function getKoreanVoice() {
+    if (!("speechSynthesis" in window)) {
+      return null;
+    }
+    return window.speechSynthesis.getVoices().find(function (voice) {
+      return voice.lang && voice.lang.toLowerCase().startsWith("ko");
+    }) || null;
+  }
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window)) {
+      console.error("[Quiz TTS] speechSynthesis is not supported in this browser.");
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const koreanVoice = getKoreanVoice();
+    utterance.lang = "ko-KR";
+    if (koreanVoice) {
+      utterance.voice = koreanVoice;
+    }
+
+    window.speechSynthesis.cancel();
+    setTimeout(function () {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  }
+
+  function getSpeechRecognitionConstructor() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function normalizeComparisonText(text) {
+    return String(text || "")
+      .normalize("NFC")
+      .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
   }
 
   function showResult(text, color) {
@@ -245,12 +288,51 @@ const QuizPlaceholderView = (function () {
     progressCountEl.textContent = (currentIndex + 1) + " / " + quizQuestions.length;
   }
 
+  function createQuizCard(item) {
+    const card = document.createElement("div");
+    card.style.width = "168px";
+    card.style.minHeight = "205px";
+    card.style.border = "1px solid #ddd";
+    card.style.borderRadius = "12px";
+    card.style.background = "white";
+    card.style.padding = "0.5rem";
+    card.style.display = "flex";
+    card.style.flexDirection = "column";
+    card.style.alignItems = "center";
+    card.style.justifyContent = "flex-start";
+
+    const image = document.createElement("img");
+    image.src = "assets/images/" + item.image;
+    image.alt = item.text;
+    image.style.width = "150px";
+    image.style.height = "150px";
+    image.style.objectFit = "contain";
+    image.style.display = "block";
+
+    const label = document.createElement("span");
+    label.textContent = item.text;
+    label.style.display = "block";
+    label.style.width = "150px";
+    label.style.marginTop = "0.45rem";
+    label.style.lineHeight = "1.25";
+    label.style.textAlign = "center";
+    label.style.whiteSpace = "normal";
+    label.style.overflowWrap = "break-word";
+    label.style.fontSize = item.type === "sentence" ? "1.025rem" : "1.125rem";
+    label.style.fontWeight = "600";
+
+    card.appendChild(image);
+    card.appendChild(label);
+    return card;
+  }
+
   function renderListeningQuestion(question) {
     messageEl.textContent = "Listen and choose the matching picture.";
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
-    listenBtn.hidden = false;
+    speakingActionsEl.hidden = true;
+    listenBtn.style.visibility = "visible";
     listenBtn.disabled = false;
     nextBtn.disabled = true;
 
@@ -271,42 +353,22 @@ const QuizPlaceholderView = (function () {
       button.style.alignItems = "center";
       button.style.justifyContent = "flex-start";
 
-      const image = document.createElement("img");
-      image.src = "assets/images/" + item.image;
-      image.alt = "Quiz choice";
-      image.style.width = "150px";
-      image.style.height = "150px";
-      image.style.objectFit = "contain";
-      image.style.display = "block";
+      const card = createQuizCard(item);
+      while (card.firstChild) {
+        button.appendChild(card.firstChild);
+      }
 
-      const label = document.createElement("span");
-      label.textContent = item.text;
-      label.style.display = "block";
-      label.style.width = "150px";
-      label.style.marginTop = "0.45rem";
-      label.style.lineHeight = "1.25";
-      label.style.textAlign = "center";
-      label.style.whiteSpace = "normal";
-      label.style.overflowWrap = "break-word";
-      label.style.fontSize = item.type === "sentence" ? "1.025rem" : "1.125rem";
-      label.style.fontWeight = "600";
-
-      button.appendChild(image);
-      button.appendChild(label);
       choicesEl.appendChild(button);
 
       button.addEventListener("click", function () {
         const isCorrect = item === question.item;
-
         if (isCorrect) {
           button.style.border = "3px solid #2e7d32";
           showResult("✓ Correct!", "#2e7d32");
-
           Array.from(choicesEl.querySelectorAll("button")).forEach(function (choiceButton) {
             choiceButton.disabled = true;
             choiceButton.style.cursor = "default";
           });
-
           nextBtn.disabled = false;
         } else {
           button.style.border = "3px solid #c62828";
@@ -314,18 +376,89 @@ const QuizPlaceholderView = (function () {
         }
       });
     });
-
-    console.log("[Quiz] listening choices:", choices);
   }
 
-  function renderSpeakingPlaceholder(question) {
+  function renderSpeakingQuestion(question) {
+    messageEl.textContent = "Look at the picture and say it.";
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
-    listenBtn.hidden = true;
+    choicesEl.appendChild(createQuizCard(question.item));
+
+    speakingAttemptStarted = false;
+    speakingActionsEl.hidden = false;
+    speakBtn.textContent = "🎤 Speak";
+    speakBtn.disabled = !getSpeechRecognitionConstructor();
+    helpListenBtn.hidden = true;
+
+    listenBtn.style.visibility = "hidden";
     listenBtn.disabled = true;
-    nextBtn.disabled = false;
-    messageEl.textContent = "speaking · " + question.item.text;
+    nextBtn.disabled = true;
+  }
+
+  function startSpeakingRecognition() {
+    if (!currentQuestion || currentQuestion.questionType !== "speaking") {
+      return;
+    }
+
+    const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
+    if (!SpeechRecognitionConstructor) {
+      console.error("[Quiz Speech] Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (!recognition) {
+      recognition = new SpeechRecognitionConstructor();
+      recognition.lang = "ko-KR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+
+      recognition.onstart = function () {
+        speakingAttemptStarted = true;
+        speakBtn.textContent = "🎤 Listening...";
+        speakBtn.disabled = true;
+      };
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        const target = normalizeComparisonText(currentQuestion.item.text);
+        const heard = normalizeComparisonText(transcript);
+        const isMatch = target === heard;
+
+        console.log("[Quiz Speech] result:", transcript);
+
+        if (isMatch) {
+          showResult("✓ Correct!", "#2e7d32");
+          helpListenBtn.hidden = true;
+        } else {
+          showResult("Try again.", "#c62828");
+          helpListenBtn.hidden = false;
+        }
+      };
+
+      recognition.onerror = function (event) {
+        console.error("[Quiz Speech] error:", event.error);
+      };
+
+      recognition.onend = function () {
+        speakBtn.textContent = "🎤 Speak";
+        speakBtn.disabled = false;
+        if (speakingAttemptStarted && currentQuestion && currentQuestion.questionType === "speaking") {
+          nextBtn.disabled = false;
+        }
+      };
+    }
+
+    resultEl.hidden = true;
+    resultEl.textContent = "";
+    helpListenBtn.hidden = true;
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error("[Quiz Speech] could not start:", error);
+    }
   }
 
   function updateNavigationButtons() {
@@ -342,15 +475,24 @@ const QuizPlaceholderView = (function () {
   }
 
   function renderCurrentQuestion() {
+    if (recognition) {
+      try {
+        recognition.abort();
+      } catch (error) {
+        // Recognition may already be inactive.
+      }
+    }
+
     currentQuestion = quizQuestions[currentIndex] || null;
 
     if (!currentQuestion) {
       resultEl.hidden = true;
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
+      speakingActionsEl.hidden = true;
       messageEl.textContent = "No quiz items.";
       prevBtn.hidden = true;
-      listenBtn.hidden = true;
+      listenBtn.style.visibility = "hidden";
       nextBtn.hidden = true;
       progressRowEl.hidden = true;
       return;
@@ -359,7 +501,7 @@ const QuizPlaceholderView = (function () {
     if (currentQuestion.questionType === "listening") {
       renderListeningQuestion(currentQuestion);
     } else {
-      renderSpeakingPlaceholder(currentQuestion);
+      renderSpeakingQuestion(currentQuestion);
     }
 
     updateNavigationButtons();
@@ -378,11 +520,20 @@ const QuizPlaceholderView = (function () {
 
     renderCurrentQuestion();
     console.log("[Quiz] questions:", quizQuestions);
-
     viewEl.hidden = false;
   }
 
   function hide() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (recognition) {
+      try {
+        recognition.abort();
+      } catch (error) {
+        // Recognition may already be inactive.
+      }
+    }
     if (viewEl) {
       viewEl.hidden = true;
     }

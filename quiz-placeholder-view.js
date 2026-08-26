@@ -10,6 +10,7 @@ const QuizPlaceholderView = (function () {
   let viewEl = null;
   let titleEl = null;
   let messageEl = null;
+  let resultEl = null;
   let choicesEl = null;
   let listenBtn = null;
   let backBtn = null;
@@ -40,6 +41,12 @@ const QuizPlaceholderView = (function () {
     messageEl.style.fontSize = "1.25rem";
     messageEl.style.marginBottom = "1rem";
 
+    resultEl = document.createElement("p");
+    resultEl.style.fontSize = "1.25rem";
+    resultEl.style.fontWeight = "600";
+    resultEl.style.minHeight = "1.5em";
+    resultEl.style.margin = "0.75rem 0";
+
     listenBtn = document.createElement("button");
     listenBtn.type = "button";
     listenBtn.className = "btn btn--primary";
@@ -62,6 +69,7 @@ const QuizPlaceholderView = (function () {
     viewEl.appendChild(icon);
     viewEl.appendChild(messageEl);
     viewEl.appendChild(listenBtn);
+    viewEl.appendChild(resultEl);
     viewEl.appendChild(choicesEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
@@ -133,6 +141,7 @@ const QuizPlaceholderView = (function () {
 
   function renderListeningQuestion(question, allItems, questionCount) {
     messageEl.textContent = "1 / " + questionCount + " · Listen and choose the picture.";
+    resultEl.textContent = "";
     listenBtn.hidden = false;
     choicesEl.innerHTML = "";
 
@@ -157,6 +166,25 @@ const QuizPlaceholderView = (function () {
 
       button.appendChild(image);
       choicesEl.appendChild(button);
+
+      button.addEventListener("click", function () {
+        const isCorrect = item === question.item;
+
+        if (isCorrect) {
+          button.style.border = "3px solid #2e7d32";
+          resultEl.textContent = "✓ Correct!";
+          resultEl.style.color = "#2e7d32";
+
+          Array.from(choicesEl.querySelectorAll("button")).forEach(function (choiceButton) {
+            choiceButton.disabled = true;
+            choiceButton.style.cursor = "default";
+          });
+        } else {
+          button.style.border = "3px solid #c62828";
+          resultEl.textContent = "Try again.";
+          resultEl.style.color = "#c62828";
+        }
+      });
     });
 
     console.log("[Quiz] listening choices:", choices);
@@ -164,6 +192,7 @@ const QuizPlaceholderView = (function () {
 
   function renderSpeakingPlaceholder(question, questionCount) {
     listenBtn.hidden = true;
+    resultEl.textContent = "";
     choicesEl.innerHTML = "";
     messageEl.textContent =
       "1 / " + questionCount +
@@ -189,6 +218,7 @@ const QuizPlaceholderView = (function () {
       console.log("[Quiz] questions:", quizQuestions);
     } else {
       listenBtn.hidden = true;
+      resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
     }

@@ -13,10 +13,14 @@ const QuizPlaceholderView = (function () {
   let resultEl = null;
   let choicesEl = null;
   let listenBtn = null;
+  let nextBtn = null;
   let backBtn = null;
   let currentHomework = null;
   let onBackCallback = null;
   let currentQuestion = null;
+  let currentIndex = 0;
+  let quizQuestions = [];
+  let quizItems = [];
 
   function createView() {
     if (viewEl) {
@@ -30,11 +34,6 @@ const QuizPlaceholderView = (function () {
 
     titleEl = document.createElement("h1");
     titleEl.className = "view-title";
-
-    const icon = document.createElement("div");
-    icon.textContent = "🎯";
-    icon.style.fontSize = "4rem";
-    icon.style.marginBottom = "1rem";
 
     messageEl = document.createElement("p");
     messageEl.className = "placeholder-message";
@@ -60,17 +59,23 @@ const QuizPlaceholderView = (function () {
     choicesEl.style.flexWrap = "wrap";
     choicesEl.style.margin = "1.5rem 0 2rem";
 
+    nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "btn btn--primary";
+    nextBtn.textContent = "Next";
+    nextBtn.hidden = true;
+
     backBtn = document.createElement("button");
     backBtn.type = "button";
     backBtn.className = "btn btn--secondary";
     backBtn.textContent = "Back";
 
     viewEl.appendChild(titleEl);
-    viewEl.appendChild(icon);
     viewEl.appendChild(messageEl);
     viewEl.appendChild(listenBtn);
     viewEl.appendChild(resultEl);
     viewEl.appendChild(choicesEl);
+    viewEl.appendChild(nextBtn);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
@@ -98,6 +103,15 @@ const QuizPlaceholderView = (function () {
       setTimeout(function () {
         window.speechSynthesis.speak(utterance);
       }, 50);
+    });
+
+    nextBtn.addEventListener("click", function () {
+      if (currentIndex >= quizQuestions.length - 1) {
+        return;
+      }
+
+      currentIndex += 1;
+      renderCurrentQuestion();
     });
 
     backBtn.addEventListener("click", function () {
@@ -139,13 +153,16 @@ const QuizPlaceholderView = (function () {
     return shuffleItems([correctItem].concat(otherItems));
   }
 
-  function renderListeningQuestion(question, allItems, questionCount) {
-    messageEl.textContent = "1 / " + questionCount + " · Listen and choose the picture.";
+  function renderListeningQuestion(question) {
+    messageEl.textContent =
+      (currentIndex + 1) + " / " + quizQuestions.length +
+      " · Listen and choose the picture.";
     resultEl.textContent = "";
     listenBtn.hidden = false;
+    nextBtn.hidden = true;
     choicesEl.innerHTML = "";
 
-    const choices = getListeningChoices(question.item, allItems);
+    const choices = getListeningChoices(question.item, quizItems);
 
     choices.forEach(function (item) {
       const button = document.createElement("button");
@@ -179,6 +196,8 @@ const QuizPlaceholderView = (function () {
             choiceButton.disabled = true;
             choiceButton.style.cursor = "default";
           });
+
+          nextBtn.hidden = currentIndex === quizQuestions.length - 1;
         } else {
           button.style.border = "3px solid #c62828";
           resultEl.textContent = "Try again.";
@@ -190,38 +209,47 @@ const QuizPlaceholderView = (function () {
     console.log("[Quiz] listening choices:", choices);
   }
 
-  function renderSpeakingPlaceholder(question, questionCount) {
+  function renderSpeakingPlaceholder(question) {
     listenBtn.hidden = true;
+    nextBtn.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
     messageEl.textContent =
-      "1 / " + questionCount +
+      (currentIndex + 1) + " / " + quizQuestions.length +
       " · speaking · " + question.item.text;
   }
 
-  function show(homework, quizItems) {
-    createView();
-    currentHomework = homework;
-    titleEl.textContent = "Week " + homework.week + " · Quiz";
+  function renderCurrentQuestion() {
+    currentQuestion = quizQuestions[currentIndex] || null;
 
-    const shuffledItems = shuffleItems(quizItems);
-    const quizQuestions = assignQuestionTypes(shuffledItems);
-    currentQuestion = quizQuestions[0] || null;
-
-    if (currentQuestion) {
-      if (currentQuestion.questionType === "listening") {
-        renderListeningQuestion(currentQuestion, quizItems, quizQuestions.length);
-      } else {
-        renderSpeakingPlaceholder(currentQuestion, quizQuestions.length);
-      }
-
-      console.log("[Quiz] questions:", quizQuestions);
-    } else {
+    if (!currentQuestion) {
       listenBtn.hidden = true;
+      nextBtn.hidden = true;
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
+      return;
     }
+
+    if (currentQuestion.questionType === "listening") {
+      renderListeningQuestion(currentQuestion);
+    } else {
+      renderSpeakingPlaceholder(currentQuestion);
+    }
+  }
+
+  function show(homework, items) {
+    createView();
+    currentHomework = homework;
+    titleEl.textContent = "Week " + homework.week + " · Quiz 🎯";
+
+    quizItems = items.slice();
+    const shuffledItems = shuffleItems(quizItems);
+    quizQuestions = assignQuestionTypes(shuffledItems);
+    currentIndex = 0;
+
+    renderCurrentQuestion();
+    console.log("[Quiz] questions:", quizQuestions);
 
     viewEl.hidden = false;
   }

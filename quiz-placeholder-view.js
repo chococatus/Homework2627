@@ -18,6 +18,9 @@ const QuizPlaceholderView = (function () {
   let prevBtn = null;
   let nextBtn = null;
   let navRowEl = null;
+  let progressRowEl = null;
+  let progressFillEl = null;
+  let progressCountEl = null;
   let backBtn = null;
   let currentHomework = null;
   let onBackCallback = null;
@@ -37,7 +40,7 @@ const QuizPlaceholderView = (function () {
     viewEl.hidden = true;
 
     titleEl = document.createElement("h1");
-    titleEl.className = "view-title";
+    titleEl.className = "study-week-label";
 
     promptRowEl = document.createElement("div");
     promptRowEl.style.display = "flex";
@@ -55,7 +58,7 @@ const QuizPlaceholderView = (function () {
 
     choicesWrapEl = document.createElement("div");
     choicesWrapEl.style.position = "relative";
-    choicesWrapEl.style.margin = "1rem 0 2rem";
+    choicesWrapEl.style.margin = "1rem 0 1.5rem";
 
     resultEl = document.createElement("p");
     resultEl.style.position = "absolute";
@@ -83,8 +86,9 @@ const QuizPlaceholderView = (function () {
     choicesWrapEl.appendChild(choicesEl);
 
     navRowEl = document.createElement("div");
-    navRowEl.style.display = "flex";
-    navRowEl.style.alignItems = "stretch";
+    navRowEl.style.display = "grid";
+    navRowEl.style.gridTemplateColumns = "56px minmax(0, auto) 56px";
+    navRowEl.style.alignItems = "center";
     navRowEl.style.justifyContent = "center";
     navRowEl.style.gap = "0.75rem";
     navRowEl.style.width = "100%";
@@ -93,44 +97,51 @@ const QuizPlaceholderView = (function () {
 
     prevBtn = document.createElement("button");
     prevBtn.type = "button";
-    prevBtn.className = "btn btn--secondary";
-    prevBtn.textContent = "Prev";
+    prevBtn.className = "study-arrow";
+    prevBtn.textContent = "<";
+    prevBtn.setAttribute("aria-label", "Previous quiz question");
 
     listenBtn = document.createElement("button");
     listenBtn.type = "button";
-    listenBtn.className = "btn btn--primary";
+    listenBtn.className = "study-speak-button";
     listenBtn.textContent = "🔊 Listen";
 
     nextBtn = document.createElement("button");
     nextBtn.type = "button";
-    nextBtn.className = "btn btn--primary";
-    nextBtn.textContent = "Next";
-
-    [prevBtn, listenBtn, nextBtn].forEach(function (button) {
-      button.style.flex = "1 1 0";
-      button.style.width = "auto";
-      button.style.maxWidth = "none";
-      button.style.minWidth = "0";
-      button.style.marginBottom = "0";
-      button.style.padding = "0.85rem 0.5rem";
-      button.style.fontSize = "1rem";
-    });
+    nextBtn.className = "study-arrow";
+    nextBtn.textContent = ">";
+    nextBtn.setAttribute("aria-label", "Next quiz question");
 
     navRowEl.appendChild(prevBtn);
     navRowEl.appendChild(listenBtn);
     navRowEl.appendChild(nextBtn);
 
+    progressRowEl = document.createElement("div");
+    progressRowEl.className = "study-position";
+
+    const progressTrackEl = document.createElement("div");
+    progressTrackEl.className = "study-position__track";
+
+    progressFillEl = document.createElement("div");
+    progressFillEl.className = "study-position__fill";
+    progressTrackEl.appendChild(progressFillEl);
+
+    progressCountEl = document.createElement("span");
+    progressCountEl.className = "study-position__count";
+
+    progressRowEl.appendChild(progressTrackEl);
+    progressRowEl.appendChild(progressCountEl);
+
     backBtn = document.createElement("button");
     backBtn.type = "button";
-    backBtn.className = "btn btn--secondary";
+    backBtn.className = "btn btn--secondary study-nav-button";
     backBtn.textContent = "Back";
-    backBtn.style.width = "100%";
-    backBtn.style.maxWidth = "360px";
 
     viewEl.appendChild(titleEl);
     viewEl.appendChild(promptRowEl);
     viewEl.appendChild(choicesWrapEl);
     viewEl.appendChild(navRowEl);
+    viewEl.appendChild(progressRowEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
@@ -223,14 +234,23 @@ const QuizPlaceholderView = (function () {
     resultEl.hidden = false;
   }
 
+  function renderProgress() {
+    if (quizQuestions.length === 0) {
+      progressRowEl.hidden = true;
+      return;
+    }
+
+    progressRowEl.hidden = false;
+    progressFillEl.style.width = (((currentIndex + 1) / quizQuestions.length) * 100) + "%";
+    progressCountEl.textContent = (currentIndex + 1) + " / " + quizQuestions.length;
+  }
+
   function renderListeningQuestion(question) {
-    messageEl.textContent =
-      (currentIndex + 1) + " / " + quizQuestions.length +
-      " · Listen and choose the matching picture.";
+    messageEl.textContent = "Listen and choose the matching picture.";
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
-    listenBtn.style.visibility = "visible";
+    listenBtn.hidden = false;
     listenBtn.disabled = false;
     nextBtn.disabled = true;
 
@@ -268,7 +288,7 @@ const QuizPlaceholderView = (function () {
       label.style.textAlign = "center";
       label.style.whiteSpace = "normal";
       label.style.overflowWrap = "break-word";
-      label.style.fontSize = item.type === "sentence" ? "0.9rem" : "1rem";
+      label.style.fontSize = item.type === "sentence" ? "1.025rem" : "1.125rem";
       label.style.fontWeight = "600";
 
       button.appendChild(image);
@@ -302,24 +322,20 @@ const QuizPlaceholderView = (function () {
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
-    listenBtn.style.visibility = "hidden";
+    listenBtn.hidden = true;
     listenBtn.disabled = true;
     nextBtn.disabled = false;
-    messageEl.textContent =
-      (currentIndex + 1) + " / " + quizQuestions.length +
-      " · speaking · " + question.item.text;
+    messageEl.textContent = "speaking · " + question.item.text;
   }
 
   function updateNavigationButtons() {
     const isFirst = currentIndex === 0;
     const isLast = currentIndex === quizQuestions.length - 1;
 
-    prevBtn.style.opacity = isFirst ? "0" : "1";
-    prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
+    prevBtn.hidden = isFirst;
     prevBtn.disabled = isFirst;
 
-    nextBtn.style.opacity = isLast ? "0" : "1";
-    nextBtn.style.pointerEvents = isLast ? "none" : "auto";
+    nextBtn.hidden = isLast;
     if (isLast) {
       nextBtn.disabled = true;
     }
@@ -333,11 +349,10 @@ const QuizPlaceholderView = (function () {
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
-      prevBtn.style.opacity = "0";
-      prevBtn.style.pointerEvents = "none";
-      listenBtn.style.visibility = "hidden";
-      nextBtn.style.opacity = "0";
-      nextBtn.style.pointerEvents = "none";
+      prevBtn.hidden = true;
+      listenBtn.hidden = true;
+      nextBtn.hidden = true;
+      progressRowEl.hidden = true;
       return;
     }
 
@@ -348,6 +363,7 @@ const QuizPlaceholderView = (function () {
     }
 
     updateNavigationButtons();
+    renderProgress();
   }
 
   function show(homework, items) {

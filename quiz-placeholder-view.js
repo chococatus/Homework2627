@@ -43,8 +43,7 @@ const QuizPlaceholderView = (function () {
     promptRowEl.style.display = "flex";
     promptRowEl.style.alignItems = "center";
     promptRowEl.style.justifyContent = "center";
-    promptRowEl.style.gap = "0.75rem";
-    promptRowEl.style.flexWrap = "wrap";
+    promptRowEl.style.width = "100%";
     promptRowEl.style.marginBottom = "1rem";
 
     messageEl = document.createElement("p");
@@ -52,15 +51,7 @@ const QuizPlaceholderView = (function () {
     messageEl.style.fontSize = "1.25rem";
     messageEl.style.margin = "0";
 
-    listenBtn = document.createElement("button");
-    listenBtn.type = "button";
-    listenBtn.className = "btn btn--primary";
-    listenBtn.textContent = "🔊 Listen";
-    listenBtn.hidden = true;
-    listenBtn.style.padding = "0.55rem 0.9rem";
-
     promptRowEl.appendChild(messageEl);
-    promptRowEl.appendChild(listenBtn);
 
     choicesWrapEl = document.createElement("div");
     choicesWrapEl.style.position = "relative";
@@ -93,8 +84,11 @@ const QuizPlaceholderView = (function () {
 
     navRowEl = document.createElement("div");
     navRowEl.style.display = "flex";
+    navRowEl.style.alignItems = "stretch";
     navRowEl.style.justifyContent = "center";
     navRowEl.style.gap = "0.75rem";
+    navRowEl.style.width = "100%";
+    navRowEl.style.maxWidth = "360px";
     navRowEl.style.marginBottom = "1rem";
 
     prevBtn = document.createElement("button");
@@ -102,12 +96,28 @@ const QuizPlaceholderView = (function () {
     prevBtn.className = "btn btn--secondary";
     prevBtn.textContent = "Prev";
 
+    listenBtn = document.createElement("button");
+    listenBtn.type = "button";
+    listenBtn.className = "btn btn--primary";
+    listenBtn.textContent = "🔊 Listen";
+
     nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "btn btn--primary";
     nextBtn.textContent = "Next";
 
+    [prevBtn, listenBtn, nextBtn].forEach(function (button) {
+      button.style.flex = "1 1 0";
+      button.style.width = "auto";
+      button.style.maxWidth = "none";
+      button.style.minWidth = "0";
+      button.style.marginBottom = "0";
+      button.style.padding = "0.85rem 0.5rem";
+      button.style.fontSize = "1rem";
+    });
+
     navRowEl.appendChild(prevBtn);
+    navRowEl.appendChild(listenBtn);
     navRowEl.appendChild(nextBtn);
 
     backBtn = document.createElement("button");
@@ -158,7 +168,7 @@ const QuizPlaceholderView = (function () {
     });
 
     nextBtn.addEventListener("click", function () {
-      if (currentIndex >= quizQuestions.length - 1) {
+      if (nextBtn.disabled || currentIndex >= quizQuestions.length - 1) {
         return;
       }
 
@@ -217,8 +227,10 @@ const QuizPlaceholderView = (function () {
       " · Listen and choose the matching picture.";
     resultEl.hidden = true;
     resultEl.textContent = "";
-    listenBtn.hidden = false;
     choicesEl.innerHTML = "";
+    listenBtn.style.visibility = "visible";
+    listenBtn.disabled = false;
+    nextBtn.disabled = true;
 
     const choices = getListeningChoices(question.item, quizItems);
 
@@ -272,6 +284,8 @@ const QuizPlaceholderView = (function () {
             choiceButton.disabled = true;
             choiceButton.style.cursor = "default";
           });
+
+          nextBtn.disabled = false;
         } else {
           button.style.border = "3px solid #c62828";
           showResult("Try again.", "#c62828");
@@ -283,31 +297,41 @@ const QuizPlaceholderView = (function () {
   }
 
   function renderSpeakingPlaceholder(question) {
-    listenBtn.hidden = true;
     resultEl.hidden = true;
     resultEl.textContent = "";
     choicesEl.innerHTML = "";
+    listenBtn.style.visibility = "hidden";
+    listenBtn.disabled = true;
+    nextBtn.disabled = false;
     messageEl.textContent =
       (currentIndex + 1) + " / " + quizQuestions.length +
       " · speaking · " + question.item.text;
   }
 
   function updateNavigationButtons() {
-    prevBtn.hidden = currentIndex === 0;
-    nextBtn.hidden = currentIndex === quizQuestions.length - 1;
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === quizQuestions.length - 1;
+
+    prevBtn.style.visibility = isFirst ? "hidden" : "visible";
+    prevBtn.disabled = isFirst;
+
+    nextBtn.style.visibility = isLast ? "hidden" : "visible";
+    if (isLast) {
+      nextBtn.disabled = true;
+    }
   }
 
   function renderCurrentQuestion() {
     currentQuestion = quizQuestions[currentIndex] || null;
 
     if (!currentQuestion) {
-      listenBtn.hidden = true;
       resultEl.hidden = true;
       resultEl.textContent = "";
       choicesEl.innerHTML = "";
       messageEl.textContent = "No quiz items.";
-      prevBtn.hidden = true;
-      nextBtn.hidden = true;
+      prevBtn.style.visibility = "hidden";
+      listenBtn.style.visibility = "hidden";
+      nextBtn.style.visibility = "hidden";
       return;
     }
 

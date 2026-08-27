@@ -278,20 +278,6 @@ const QuizPlaceholderView = (function () {
       .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
   }
 
-  function isSpeakingMatch(targetText, transcript) {
-    const target = normalizeComparisonText(targetText);
-    const heard = normalizeComparisonText(transcript);
-
-    if (target === heard) {
-      return true;
-    }
-
-    const fillerSyllables = ["아", "어", "음"];
-    return fillerSyllables.some(function (filler) {
-      return heard === filler + target;
-    });
-  }
-
   function cleanDisplayTranscript(text) {
     return String(text || "")
       .normalize("NFC")
@@ -300,13 +286,89 @@ const QuizPlaceholderView = (function () {
       .trim();
   }
 
+  function compareTargetToHeard(target, heard) {
+    const targetChars = Array.from(target);
+    const heardChars = Array.from(heard);
+    const rows = targetChars.length + 1;
+    const cols = heardChars.length + 1;
+    const matrix = Array.from({ length: rows }, function () {
+      return Array(cols).fill(0);
+    });
+
+    for (let i = 0; i < rows; i += 1) {
+      matrix[i][0] = i;
+    }
+
+    for (let j = 0; j < cols; j += 1) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i < rows; i += 1) {
+      for (let j = 1; j < cols; j += 1) {
+        const substitutionCost = targetChars[i - 1] === heardChars[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + substitutionCost
+        );
+      }
+    }
+
+    const targetMatches = Array(targetChars.length).fill(true);
+    const heardMatches = Array(heardChars.length).fill(true);
+    let i = targetChars.length;
+    let j = heardChars.length;
+
+    while (i > 0 || j > 0) {
+      if (
+        i > 0 &&
+        j > 0 &&
+        targetChars[i - 1] === heardChars[j - 1] &&
+        matrix[i][j] === matrix[i - 1][j - 1]
+      ) {
+        i -= 1;
+        j -= 1;
+        continue;
+      }
+
+      if (i > 0 && j > 0 && matrix[i][j] === matrix[i - 1][j - 1] + 1) {
+        targetMatches[i - 1] = false;
+        heardMatches[j - 1] = false;
+        i -= 1;
+        j -= 1;
+        continue;
+      }
+
+      if (i > 0 && matrix[i][j] === matrix[i - 1][j] + 1) {
+        targetMatches[i - 1] = false;
+        i -= 1;
+        continue;
+      }
+
+      if (j > 0) {
+        heardMatches[j - 1] = false;
+        j -= 1;
+      }
+    }
+
+    return {
+      distance: matrix[targetChars.length][heardChars.length],
+      targetChars: targetChars,
+      targetMatches: targetMatches,
+      heardChars: heardChars,
+      heardMatches: heardMatches,
+    };
+  }
+
   function showResult(text, color) {
     resultEl.textContent = text;
     resultEl.style.color = color;
     resultEl.hidden = false;
   }
 
-  function showSpeakingTranscript(transcript, isMatch) {
+  function showSpeakingTranscript(transcript, comparison, isMatch) {
+    const displayHeard = cleanDisplayTranscript(transcript);
+
     speakingResultEl.innerHTML = "";
     speakingResultEl.hidden = false;
     speakingResultEl.classList.toggle("is-match", isMatch);
@@ -320,10 +382,21 @@ const QuizPlaceholderView = (function () {
     label.textContent = "I heard: ";
     line.appendChild(label);
 
-    const heard = document.createElement("span");
-    heard.textContent = cleanDisplayTranscript(transcript);
-    heard.className = isMatch ? "study-result-match" : "study-result-mismatch";
-    line.appendChild(heard);
+    let heardIndex = 0;
+    Array.from(displayHeard).forEach(function (char) {
+      if (/\s/.test(char)) {
+        line.appendChild(document.createTextNode(char));
+        return;
+      }
+
+      const span = document.createElement("span");
+      span.textContent = char;
+      span.className = comparison.heardMatches[heardIndex]
+        ? "study-result-match"
+        : "study-result-mismatch";
+      line.appendChild(span);
+      heardIndex += 1;
+    });
 
     if (isMatch) {
       const icon = document.createElement("span");
@@ -485,10 +558,13 @@ const QuizPlaceholderView = (function () {
 
       recognition.onresult = function (event) {
         const transcript = event.results[0][0].transcript;
-        const isMatch = isSpeakingMatch(currentQuestion.item.text, transcript);
+        const target = normalizeComparisonText(currentQuestion.item.text);
+        const heard = normalizeComparisonText(transcript);
+        const comparison = compareTargetToHeard(target, heard);
+        const isMatch = comparison.distance === 0;
 
         console.log("[Quiz Speech] result:", transcript);
-        showSpeakingTranscript(transcript, isMatch);
+        showSpeakingTranscript(transcript, comparison, isMatch);
 
         if (isMatch) {
           showResult("✓ Correct!", "#2e7d32");

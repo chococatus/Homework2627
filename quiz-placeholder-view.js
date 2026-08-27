@@ -278,6 +278,20 @@ const QuizPlaceholderView = (function () {
       .replace(/[\s.,!?;:'"“”‘’…·~\-_/\\()[\]{}]/g, "");
   }
 
+  function isSpeakingMatch(targetText, transcript) {
+    const target = normalizeComparisonText(targetText);
+    const heard = normalizeComparisonText(transcript);
+
+    if (target === heard) {
+      return true;
+    }
+
+    const fillerSyllables = ["아", "어", "음"];
+    return fillerSyllables.some(function (filler) {
+      return heard === filler + target;
+    });
+  }
+
   function cleanDisplayTranscript(text) {
     return String(text || "")
       .normalize("NFC")
@@ -471,9 +485,7 @@ const QuizPlaceholderView = (function () {
 
       recognition.onresult = function (event) {
         const transcript = event.results[0][0].transcript;
-        const target = normalizeComparisonText(currentQuestion.item.text);
-        const heard = normalizeComparisonText(transcript);
-        const isMatch = target === heard;
+        const isMatch = isSpeakingMatch(currentQuestion.item.text, transcript);
 
         console.log("[Quiz Speech] result:", transcript);
         showSpeakingTranscript(transcript, isMatch);

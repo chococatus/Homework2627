@@ -7,6 +7,57 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="speech-result.css">
   <link rel="stylesheet" href="study-position.css">
+  <style>
+    .name-prompt {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .name-prompt__title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+    }
+
+    .name-prompt__title {
+      margin-bottom: 0;
+    }
+
+    .name-prompt__listen {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      border: 2px solid var(--color-border);
+      border-radius: 50%;
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-size: 1.15rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .name-prompt__english {
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+    }
+
+    .welcome-student,
+    .home-student {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text);
+      text-align: center;
+    }
+
+    @media (min-width: 600px) {
+      .welcome-student,
+      .home-student {
+        font-size: 2.25rem;
+      }
+    }
+  </style>
 </head>
 <body>
 

@@ -13,20 +13,8 @@ const WelcomeView = (function () {
   let onStartCallback = null;
   let onChangeStudentCallback = null;
 
-  function renderStudent(student) {
-    studentEl.innerHTML = "";
-
-    const icon = createShapeIcon(student);
-    const name = document.createElement("span");
-    name.className = "student-name";
-    name.textContent = student.name;
-
-    studentEl.appendChild(icon);
-    studentEl.appendChild(name);
-  }
-
-  function show(student) {
-    renderStudent(student);
+  function show(name) {
+    studentEl.textContent = name;
     viewEl.hidden = false;
   }
 
@@ -39,9 +27,9 @@ const WelcomeView = (function () {
     onChangeStudentCallback = onChangeStudent;
 
     startBtn.addEventListener("click", function () {
-      const savedId = getSavedStudentId();
-      if (savedId && onStartCallback) {
-        onStartCallback(savedId);
+      const savedName = getSavedStudentName();
+      if (savedName && onStartCallback) {
+        onStartCallback(savedName);
       }
     });
 

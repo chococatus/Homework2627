@@ -1,31 +1,19 @@
 /**
  * Local Storage Helpers
  * ---------------------
- * Remembers which student was last chosen so returning users
- * skip the selection screen.
+ * Keeps the student's display name on this device only.
  */
 
-const STORAGE_KEY = "kkoekkori-selected-student";
+const STORAGE_KEY = "kkoekkori-student-name";
 
-/**
- * Save the selected student's id to Local Storage.
- * @param {string} studentId
- */
-function saveSelectedStudent(studentId) {
-  localStorage.setItem(STORAGE_KEY, studentId);
+function saveStudentName(name) {
+  localStorage.setItem(STORAGE_KEY, String(name || "").trim());
 }
 
-/**
- * Read the saved student id, or null if none is stored.
- * @returns {string|null}
- */
-function getSavedStudentId() {
+function getSavedStudentName() {
   return localStorage.getItem(STORAGE_KEY);
 }
 
-/**
- * Remove the saved student so the selection screen appears again.
- */
-function clearSelectedStudent() {
+function clearStudentName() {
   localStorage.removeItem(STORAGE_KEY);
 }

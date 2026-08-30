@@ -1,12 +1,8 @@
 /**
  * Korean Homework App — Navigation
  * --------------------------------
- * Connects the views together. Data lives in separate files
- * (students.js, homework.js, progress.js) so Google Sheets
- * can replace them later without touching this file.
+ * Connects the views together.
  */
-
-// --- View management ---
 
 const ALL_VIEWS = [
   SelectionView,
@@ -25,31 +21,29 @@ function hideAllViews() {
   StudyPosition.hide();
 }
 
-function navigateToHome(studentId) {
-  const student = getStudentById(studentId);
-  if (!student) {
+function navigateToHome(name) {
+  if (!name) {
     return;
   }
 
   hideAllViews();
-  HomeView.show(student);
+  HomeView.show(name);
 }
 
 function navigateToSelection() {
-  clearSelectedStudent();
+  clearStudentName();
   hideAllViews();
   SelectionView.show();
 }
 
-function navigateToWelcome(studentId) {
-  const student = getStudentById(studentId);
-  if (!student) {
+function navigateToWelcome(name) {
+  if (!name) {
     SelectionView.show();
     return;
   }
 
   hideAllViews();
-  WelcomeView.show(student);
+  WelcomeView.show(name);
 }
 
 async function navigateToWeekSection(homework) {
@@ -71,13 +65,7 @@ async function navigateToStory(homework) {
     return item.type === "story";
   });
 
-  console.log(
-    "[Story] week:",
-    homework.week,
-    "items:",
-    storyItems.length,
-    storyItems
-  );
+  console.log("[Story] week:", homework.week, "items:", storyItems.length, storyItems);
 
   hideAllViews();
   StoryView.show(homework, storyItems);
@@ -110,42 +98,32 @@ async function navigateToQuiz(homework) {
     return item.type === "word" || item.type === "sentence";
   });
 
-  console.log(
-    "[Quiz] week:",
-    homework.week,
-    "items:",
-    quizItems.length,
-    quizItems
-  );
+  console.log("[Quiz] week:", homework.week, "items:", quizItems.length, quizItems);
 
   hideAllViews();
   QuizPlaceholderView.show(homework, quizItems);
 }
 
-function navigateToSavedStudentHome() {
-  const savedId = getSavedStudentId();
+function navigateToSavedHome() {
+  const savedName = getSavedStudentName();
 
-  if (savedId && getStudentById(savedId)) {
-    navigateToHome(savedId);
+  if (savedName) {
+    navigateToHome(savedName);
   } else {
     hideAllViews();
     SelectionView.show();
   }
 }
 
-// --- Wire up view callbacks ---
-
 SelectionView.init(navigateToHome);
-
 WelcomeView.init(navigateToHome, navigateToSelection);
-
 HomeView.init(navigateToWeekSection, navigateToSelection);
 
 WeekSectionView.init(
   navigateToStory,
   navigateToSpeaking,
   navigateToQuiz,
-  navigateToSavedStudentHome
+  navigateToSavedHome
 );
 
 StoryView.init(function (homework) {
@@ -161,20 +139,15 @@ PlaceholderView.init(function (homework) {
 });
 
 const siteHomeButton = document.getElementById("site-home-button");
-siteHomeButton.addEventListener("click", navigateToSavedStudentHome);
+siteHomeButton.addEventListener("click", navigateToSavedHome);
 
-// --- App startup ---
-
-async function init() {
-  await loadStudentsData();
-
-  const savedId = getSavedStudentId();
-  const savedStudent = savedId ? getStudentById(savedId) : null;
+function init() {
+  const savedName = getSavedStudentName();
 
   hideAllViews();
 
-  if (savedStudent) {
-    WelcomeView.show(savedStudent);
+  if (savedName) {
+    navigateToWelcome(savedName);
   } else {
     SelectionView.show();
   }

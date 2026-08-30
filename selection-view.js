@@ -8,8 +8,31 @@ const SelectionView = (function () {
   const viewEl = document.getElementById("selection-view");
   const formEl = document.getElementById("name-form");
   const inputEl = document.getElementById("student-name-input");
+  const listenBtn = document.getElementById("name-prompt-listen-button");
 
   let onStartCallback = null;
+
+  function speakNamePrompt() {
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance("이름이 뭐예요?");
+    utterance.lang = "ko-KR";
+
+    const koreanVoice = window.speechSynthesis.getVoices().find(function (voice) {
+      return voice.lang && voice.lang.toLowerCase().startsWith("ko");
+    });
+
+    if (koreanVoice) {
+      utterance.voice = koreanVoice;
+    }
+
+    window.speechSynthesis.cancel();
+    setTimeout(function () {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  }
 
   function show() {
     inputEl.value = "";
@@ -25,6 +48,8 @@ const SelectionView = (function () {
 
   function init(onStart) {
     onStartCallback = onStart;
+
+    listenBtn.addEventListener("click", speakNamePrompt);
 
     formEl.addEventListener("submit", function (event) {
       event.preventDefault();

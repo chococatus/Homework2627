@@ -4,6 +4,12 @@
  * Connects the views together.
  */
 
+// Set to true when browser console debug logs are needed.
+const DEBUG = false;
+if (!DEBUG) {
+  console.log = function () {};
+}
+
 const ALL_VIEWS = [
   SelectionView,
   WelcomeView,
@@ -88,6 +94,8 @@ async function navigateToSpeaking(homework) {
 
   hideAllViews();
   PlaceholderView.show(homework, speakingItems);
+  document.querySelector("#placeholder-view .view-title").textContent =
+    "Week " + homework.week + " · Speaking";
   StudyPosition.show(speakingItems.length);
 }
 

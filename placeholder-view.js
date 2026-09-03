@@ -329,7 +329,7 @@ const PlaceholderView = (function () {
     if (!recognition) {
       recognition = new SpeechRecognitionConstructor();
       recognition.lang = "ko-KR";
-      recognition.interimResults = false;
+      recognition.interimResults = true;
       recognition.maxAlternatives = 1;
       recognition.continuous = false;
 

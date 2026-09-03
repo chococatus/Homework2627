@@ -176,7 +176,9 @@ const QuizPlaceholderView = (function () {
     mainEl.appendChild(viewEl);
 
     listenBtn.addEventListener("click", function () {
-      if (currentQuestion && currentQuestion.questionType === "listening") {
+      if (currentIndex >= quizQuestions.length) {
+        speakText("잘했어!");
+      } else if (currentQuestion && currentQuestion.questionType === "listening") {
         speakText(currentQuestion.item.text);
       }
     });
@@ -198,9 +200,10 @@ const QuizPlaceholderView = (function () {
     });
 
     nextBtn.addEventListener("click", function () {
-      if (nextBtn.disabled || currentIndex >= quizQuestions.length - 1) {
+      if (nextBtn.disabled || currentIndex >= quizQuestions.length) {
         return;
       }
+
       currentIndex += 1;
       renderCurrentQuestion();
     });
@@ -415,9 +418,10 @@ const QuizPlaceholderView = (function () {
       return;
     }
 
+    const displayIndex = Math.min(currentIndex + 1, quizQuestions.length);
     progressRowEl.hidden = false;
-    progressFillEl.style.width = (((currentIndex + 1) / quizQuestions.length) * 100) + "%";
-    progressCountEl.textContent = (currentIndex + 1) + " / " + quizQuestions.length;
+    progressFillEl.style.width = ((displayIndex / quizQuestions.length) * 100) + "%";
+    progressCountEl.textContent = displayIndex + " / " + quizQuestions.length;
   }
 
   function createQuizCard(item) {
@@ -458,7 +462,62 @@ const QuizPlaceholderView = (function () {
     return card;
   }
 
+  function resetQuestionLayout() {
+    messageEl.style.fontSize = "1.25rem";
+    messageEl.style.fontWeight = "400";
+    choicesEl.style.flexDirection = "row";
+    choicesEl.style.alignItems = "stretch";
+  }
+
+  function renderCompletion() {
+    currentQuestion = null;
+    resultEl.hidden = true;
+    resultEl.textContent = "";
+    speakingResultEl.hidden = true;
+    speakingResultEl.innerHTML = "";
+    choicesEl.innerHTML = "";
+
+    messageEl.textContent = "잘했어!";
+    messageEl.style.fontSize = "2.25rem";
+    messageEl.style.fontWeight = "700";
+
+    choicesEl.style.flexDirection = "column";
+    choicesEl.style.alignItems = "center";
+
+    const english = document.createElement("p");
+    english.textContent = "Good job!";
+    english.style.fontSize = "1rem";
+    english.style.fontWeight = "600";
+    english.style.color = "var(--color-text-muted)";
+    english.style.margin = "0";
+
+    const image = document.createElement("img");
+    image.src = "assets/images/good job.png";
+    image.alt = "Celebration fireworks";
+    image.style.width = "320px";
+    image.style.maxWidth = "100%";
+    image.style.height = "240px";
+    image.style.objectFit = "contain";
+
+    choicesEl.appendChild(english);
+    choicesEl.appendChild(image);
+
+    listenBtn.hidden = false;
+    listenBtn.disabled = !("speechSynthesis" in window);
+    speakBtn.hidden = true;
+    helpListenBtn.hidden = true;
+
+    prevBtn.hidden = false;
+    prevBtn.disabled = false;
+    prevBtn.setAttribute("aria-label", "Return to last quiz question");
+    nextBtn.hidden = true;
+    nextBtn.disabled = true;
+
+    renderProgress();
+  }
+
   function renderListeningQuestion(question) {
+    resetQuestionLayout();
     messageEl.textContent = "Listen and choose the matching picture.";
     resultEl.hidden = true;
     resultEl.textContent = "";
@@ -514,6 +573,7 @@ const QuizPlaceholderView = (function () {
   }
 
   function renderSpeakingQuestion(question) {
+    resetQuestionLayout();
     messageEl.textContent = "Look at the picture and say it.";
     resultEl.hidden = true;
     resultEl.textContent = "";
@@ -607,11 +667,13 @@ const QuizPlaceholderView = (function () {
 
     prevBtn.hidden = isFirst;
     prevBtn.disabled = isFirst;
+    prevBtn.setAttribute("aria-label", "Previous quiz question");
 
-    nextBtn.hidden = isLast;
-    if (isLast) {
-      nextBtn.disabled = true;
-    }
+    nextBtn.hidden = false;
+    nextBtn.setAttribute(
+      "aria-label",
+      isLast ? "Finish quiz" : "Next quiz question"
+    );
   }
 
   function renderCurrentQuestion() {
@@ -621,6 +683,11 @@ const QuizPlaceholderView = (function () {
       } catch (error) {
         // Recognition may already be inactive.
       }
+    }
+
+    if (quizQuestions.length > 0 && currentIndex >= quizQuestions.length) {
+      renderCompletion();
+      return;
     }
 
     currentQuestion = quizQuestions[currentIndex] || null;

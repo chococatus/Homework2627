@@ -179,6 +179,31 @@ const PlaceholderView = (function () {
     }
   }
 
+  function showPendingRecognitionResult() {
+    if (!resultEl) {
+      return;
+    }
+
+    resultEl.innerHTML = "";
+    resultEl.hidden = false;
+    resultEl.classList.remove("is-match", "needs-practice");
+
+    const resultLine = document.createElement("p");
+    resultLine.className = "study-result-line";
+
+    const label = document.createElement("span");
+    label.className = "study-result-label";
+    label.textContent = "I heard: ";
+    resultLine.appendChild(label);
+
+    const pending = document.createElement("span");
+    pending.className = "study-result-label";
+    pending.textContent = "…";
+    resultLine.appendChild(pending);
+
+    resultEl.appendChild(resultLine);
+  }
+
   function renderRecognitionResult(transcript) {
     if (!resultEl || items.length === 0) {
       return;
@@ -324,6 +349,7 @@ const PlaceholderView = (function () {
     }
 
     clearRecognitionResult();
+    showPendingRecognitionResult();
     await startTemporaryRecording();
 
     if (!recognition) {

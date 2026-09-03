@@ -38,21 +38,80 @@ const StudyPosition = (function () {
     };
   }
 
+  function speakCompletion() {
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance("잘했어!");
+    utterance.lang = "ko-KR";
+    const koreanVoice = window.speechSynthesis.getVoices().find(function (voice) {
+      return voice.lang && voice.lang.toLowerCase().startsWith("ko");
+    });
+
+    if (koreanVoice) {
+      utterance.voice = koreanVoice;
+    }
+
+    window.speechSynthesis.cancel();
+    setTimeout(function () {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  }
+
+  function ensureCompletionElements(messageEl, voiceRow) {
+    let englishEl = document.getElementById("study-completion-english");
+    if (!englishEl && messageEl) {
+      englishEl = document.createElement("p");
+      englishEl.id = "study-completion-english";
+      englishEl.textContent = "Good job!";
+      englishEl.style.fontSize = "1rem";
+      englishEl.style.fontWeight = "600";
+      englishEl.style.color = "var(--color-text-muted)";
+      englishEl.style.textAlign = "center";
+      englishEl.style.margin = "-0.5rem 0 1rem";
+      messageEl.insertAdjacentElement("afterend", englishEl);
+    }
+
+    let completionListenBtn = document.getElementById("study-completion-listen");
+    if (!completionListenBtn && voiceRow) {
+      completionListenBtn = document.createElement("button");
+      completionListenBtn.id = "study-completion-listen";
+      completionListenBtn.type = "button";
+      completionListenBtn.className = "study-speak-button";
+      completionListenBtn.textContent = "🔊 Listen";
+      completionListenBtn.setAttribute("aria-label", "Listen to 잘했어");
+      completionListenBtn.addEventListener("click", speakCompletion);
+      voiceRow.appendChild(completionListenBtn);
+    }
+
+    return {
+      englishEl: englishEl,
+      completionListenBtn: completionListenBtn,
+    };
+  }
+
   function showCompletion() {
     const messageEl = document.querySelector("#placeholder-view .study-text");
     const imageEl = document.querySelector("#placeholder-view .study-image");
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
-    const listenBtn = document.querySelector("#placeholder-view .study-speak-button");
+    const listenBtn = document.querySelector("#placeholder-view .study-speak-button:not(#study-completion-listen)");
     const speakBtn = document.querySelector("#placeholder-view .study-recognition-button");
+    const replayBtn = document.querySelector("#placeholder-view .study-replay-button");
     const resultEl = document.querySelector("#placeholder-view .study-recognition-result");
+    const completionElements = ensureCompletionElements(messageEl, voiceRow);
 
     saveLastItemSnapshot();
     completionActive = true;
 
     if (messageEl) {
       messageEl.textContent = "잘했어!";
+    }
+
+    if (completionElements.englishEl) {
+      completionElements.englishEl.hidden = false;
     }
 
     if (imageEl) {
@@ -82,11 +141,20 @@ const StudyPosition = (function () {
       speakBtn.hidden = true;
     }
 
+    if (replayBtn) {
+      replayBtn.hidden = true;
+    }
+
+    if (completionElements.completionListenBtn) {
+      completionElements.completionListenBtn.hidden = false;
+      completionElements.completionListenBtn.disabled = !("speechSynthesis" in window);
+    }
+
     if (resultEl) {
       resultEl.hidden = true;
     }
 
-    // Keep the completed 10 / 10 position indicator and the existing Back to Home button.
+    // Keep the completed position indicator and the existing Back button.
     renderPositionOnly();
   }
 
@@ -100,13 +168,23 @@ const StudyPosition = (function () {
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
-    const listenBtn = document.querySelector("#placeholder-view .study-speak-button");
+    const listenBtn = document.querySelector("#placeholder-view .study-speak-button:not(#study-completion-listen)");
     const speakBtn = document.querySelector("#placeholder-view .study-recognition-button");
+    const englishEl = document.getElementById("study-completion-english");
+    const completionListenBtn = document.getElementById("study-completion-listen");
 
     completionActive = false;
 
     if (messageEl) {
       messageEl.textContent = lastItemSnapshot.text;
+    }
+
+    if (englishEl) {
+      englishEl.hidden = true;
+    }
+
+    if (completionListenBtn) {
+      completionListenBtn.hidden = true;
     }
 
     if (imageEl) {
@@ -240,12 +318,31 @@ const StudyPosition = (function () {
     current = total > 0 ? 1 : 0;
     completionActive = false;
     lastItemSnapshot = null;
+
+    const englishEl = document.getElementById("study-completion-english");
+    const completionListenBtn = document.getElementById("study-completion-listen");
+    if (englishEl) {
+      englishEl.hidden = true;
+    }
+    if (completionListenBtn) {
+      completionListenBtn.hidden = true;
+    }
+
     render();
   }
 
   function hide() {
     completionActive = false;
     lastItemSnapshot = null;
+
+    const englishEl = document.getElementById("study-completion-english");
+    const completionListenBtn = document.getElementById("study-completion-listen");
+    if (englishEl) {
+      englishEl.hidden = true;
+    }
+    if (completionListenBtn) {
+      completionListenBtn.hidden = true;
+    }
 
     if (rowEl) {
       rowEl.hidden = true;

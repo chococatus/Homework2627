@@ -13,6 +13,7 @@ const StudyPosition = (function () {
   let total = 0;
   let completionActive = false;
   let lastItemSnapshot = null;
+  let completionHeadingRow = null;
 
   function getNextButton() {
     return document.querySelector(
@@ -29,12 +30,14 @@ const StudyPosition = (function () {
   function saveLastItemSnapshot() {
     const messageEl = document.querySelector("#placeholder-view .study-text");
     const imageEl = document.querySelector("#placeholder-view .study-image");
+    const titleEl = document.querySelector("#placeholder-view .view-title");
 
     lastItemSnapshot = {
       text: messageEl ? messageEl.textContent : "",
       imageSrc: imageEl ? imageEl.getAttribute("src") : "",
       imageAlt: imageEl ? imageEl.alt : "",
       imageHidden: imageEl ? imageEl.hidden : true,
+      title: titleEl ? titleEl.textContent : "",
     };
   }
 
@@ -79,8 +82,11 @@ const StudyPosition = (function () {
       completionListenBtn.id = "study-completion-listen";
       completionListenBtn.type = "button";
       completionListenBtn.className = "study-speak-button";
-      completionListenBtn.textContent = "🔊 Listen";
+      completionListenBtn.textContent = "🔊";
       completionListenBtn.setAttribute("aria-label", "Listen to 잘했어");
+      completionListenBtn.style.width = "44px";
+      completionListenBtn.style.height = "44px";
+      completionListenBtn.style.padding = "0";
       completionListenBtn.addEventListener("click", speakCompletion);
       voiceRow.appendChild(completionListenBtn);
     }
@@ -91,9 +97,58 @@ const StudyPosition = (function () {
     };
   }
 
+  function placeCompletionHeading(messageEl, completionListenBtn) {
+    if (!messageEl || !completionListenBtn) {
+      return;
+    }
+
+    if (!completionHeadingRow) {
+      completionHeadingRow = document.createElement("div");
+      completionHeadingRow.id = "study-completion-heading";
+      completionHeadingRow.style.display = "flex";
+      completionHeadingRow.style.alignItems = "center";
+      completionHeadingRow.style.justifyContent = "center";
+      completionHeadingRow.style.gap = "0.5rem";
+      completionHeadingRow.style.width = "100%";
+      messageEl.insertAdjacentElement("beforebegin", completionHeadingRow);
+    }
+
+    completionHeadingRow.hidden = false;
+    completionHeadingRow.appendChild(messageEl);
+    completionHeadingRow.appendChild(completionListenBtn);
+    messageEl.style.margin = "0";
+  }
+
+  function restoreCompletionHeading() {
+    if (!completionHeadingRow) {
+      return;
+    }
+
+    const messageEl = completionHeadingRow.querySelector(".study-text");
+    const completionListenBtn = document.getElementById("study-completion-listen");
+    const englishEl = document.getElementById("study-completion-english");
+    const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
+
+    if (messageEl) {
+      if (englishEl) {
+        englishEl.insertAdjacentElement("beforebegin", messageEl);
+      } else {
+        completionHeadingRow.insertAdjacentElement("beforebegin", messageEl);
+      }
+      messageEl.style.margin = "";
+    }
+
+    if (completionListenBtn && voiceRow) {
+      voiceRow.appendChild(completionListenBtn);
+    }
+
+    completionHeadingRow.hidden = true;
+  }
+
   function showCompletion() {
     const messageEl = document.querySelector("#placeholder-view .study-text");
     const imageEl = document.querySelector("#placeholder-view .study-image");
+    const titleEl = document.querySelector("#placeholder-view .view-title");
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
@@ -105,6 +160,15 @@ const StudyPosition = (function () {
 
     saveLastItemSnapshot();
     completionActive = true;
+
+    if (titleEl && lastItemSnapshot) {
+      const match = lastItemSnapshot.title.match(/Week\s+(\d+)/i);
+      if (match) {
+        titleEl.textContent = "Week " + match[1] + " · Speaking";
+      }
+      titleEl.style.width = "100%";
+      titleEl.style.textAlign = "center";
+    }
 
     if (messageEl) {
       messageEl.textContent = "잘했어!";
@@ -130,7 +194,7 @@ const StudyPosition = (function () {
     }
 
     if (voiceRow) {
-      voiceRow.hidden = false;
+      voiceRow.hidden = true;
     }
 
     if (listenBtn) {
@@ -148,6 +212,7 @@ const StudyPosition = (function () {
     if (completionElements.completionListenBtn) {
       completionElements.completionListenBtn.hidden = false;
       completionElements.completionListenBtn.disabled = !("speechSynthesis" in window);
+      placeCompletionHeading(messageEl, completionElements.completionListenBtn);
     }
 
     if (resultEl) {
@@ -165,6 +230,7 @@ const StudyPosition = (function () {
 
     const messageEl = document.querySelector("#placeholder-view .study-text");
     const imageEl = document.querySelector("#placeholder-view .study-image");
+    const titleEl = document.querySelector("#placeholder-view .view-title");
     const prevBtn = getPreviousButton();
     const nextBtn = getNextButton();
     const voiceRow = document.querySelector("#placeholder-view .study-voice-row");
@@ -174,6 +240,13 @@ const StudyPosition = (function () {
     const completionListenBtn = document.getElementById("study-completion-listen");
 
     completionActive = false;
+    restoreCompletionHeading();
+
+    if (titleEl) {
+      titleEl.textContent = lastItemSnapshot.title;
+      titleEl.style.width = "";
+      titleEl.style.textAlign = "";
+    }
 
     if (messageEl) {
       messageEl.textContent = lastItemSnapshot.text;
@@ -318,6 +391,7 @@ const StudyPosition = (function () {
     current = total > 0 ? 1 : 0;
     completionActive = false;
     lastItemSnapshot = null;
+    restoreCompletionHeading();
 
     const englishEl = document.getElementById("study-completion-english");
     const completionListenBtn = document.getElementById("study-completion-listen");
@@ -333,6 +407,7 @@ const StudyPosition = (function () {
 
   function hide() {
     completionActive = false;
+    restoreCompletionHeading();
     lastItemSnapshot = null;
 
     const englishEl = document.getElementById("study-completion-english");

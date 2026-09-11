@@ -96,7 +96,7 @@ async function navigateToSpeaking(homework) {
   PlaceholderView.show(homework, speakingItems);
   document.querySelector("#placeholder-view .view-title").textContent =
     "Week " + homework.week + " · Speaking";
-  StudyPosition.show(speakingItems.length);
+  StudyPosition.show(speakingItems.length, homework);
 }
 
 async function navigateToQuiz(homework) {

@@ -21,7 +21,7 @@ const QuizPlaceholderView = (function () {
   let prevBtn = null;
   let nextBtn = null;
   let progressRowEl = null;
-  let progressFillEl = null;
+  let progressTrackEl = null;
   let progressCountEl = null;
   let backBtn = null;
   let currentHomework = null;
@@ -30,6 +30,7 @@ const QuizPlaceholderView = (function () {
   let currentIndex = 0;
   let quizQuestions = [];
   let quizItems = [];
+  let quizStatuses = [];
   let recognition = null;
   let speakingAttemptStarted = false;
 
@@ -148,12 +149,8 @@ const QuizPlaceholderView = (function () {
     progressRowEl = document.createElement("div");
     progressRowEl.className = "study-position";
 
-    const progressTrackEl = document.createElement("div");
-    progressTrackEl.className = "study-position__track";
-
-    progressFillEl = document.createElement("div");
-    progressFillEl.className = "study-position__fill";
-    progressTrackEl.appendChild(progressFillEl);
+    progressTrackEl = document.createElement("div");
+    progressTrackEl.className = "study-position__track study-position__track--segmented";
 
     progressCountEl = document.createElement("span");
     progressCountEl.className = "study-position__count";
@@ -410,16 +407,36 @@ const QuizPlaceholderView = (function () {
     speakingResultEl.appendChild(line);
   }
 
+  function markQuizAttempt(isCorrect) {
+    if (currentIndex < 0 || currentIndex >= quizStatuses.length) {
+      return;
+    }
+
+    if (isCorrect) {
+      quizStatuses[currentIndex] = "correct";
+    } else if (quizStatuses[currentIndex] !== "correct") {
+      quizStatuses[currentIndex] = "attempted";
+    }
+
+    renderProgress();
+  }
+
   function renderProgress() {
     if (quizQuestions.length === 0) {
       progressRowEl.hidden = true;
       return;
     }
 
-    const displayIndex = Math.min(currentIndex + 1, quizQuestions.length);
     progressRowEl.hidden = false;
-    progressFillEl.style.width = ((displayIndex / quizQuestions.length) * 100) + "%";
-    progressCountEl.textContent = displayIndex + " / " + quizQuestions.length;
+    progressTrackEl.innerHTML = "";
+
+    quizStatuses.forEach(function (status) {
+      const segment = document.createElement("span");
+      segment.className = "study-position__segment study-position__segment--" + status;
+      progressTrackEl.appendChild(segment);
+    });
+
+    progressCountEl.textContent = (currentIndex + 1) + " / " + quizQuestions.length;
   }
 
   function createQuizCard(item) {
@@ -507,6 +524,8 @@ const QuizPlaceholderView = (function () {
 
       button.addEventListener("click", function () {
         const isCorrect = item === question.item;
+        markQuizAttempt(isCorrect);
+
         if (isCorrect) {
           button.style.border = "3px solid #2e7d32";
           showResult("✓ Correct!", "#2e7d32");
@@ -576,6 +595,7 @@ const QuizPlaceholderView = (function () {
 
         console.log("[Quiz Speech] result:", transcript);
         showSpeakingTranscript(transcript, comparison, isMatch);
+        markQuizAttempt(isMatch);
 
         if (isMatch) {
           showResult("✓ Correct!", "#2e7d32");
@@ -669,6 +689,7 @@ const QuizPlaceholderView = (function () {
     quizItems = items.slice();
     const shuffledItems = shuffleItems(quizItems);
     quizQuestions = assignQuestionTypes(shuffledItems);
+    quizStatuses = Array(quizQuestions.length).fill("unattempted");
     currentIndex = 0;
 
     renderCurrentQuestion();

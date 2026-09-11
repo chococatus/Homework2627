@@ -621,7 +621,7 @@ const QuizPlaceholderView = (function () {
         const target = normalizeComparisonText(currentQuestion.item.text);
         const heard = normalizeComparisonText(transcript);
         const comparison = compareTargetToHeard(target, heard);
-        const isMatch = target.length > 0 && heard.includes(target);
+        const isMatch = SpeechMatch.isMatch(currentQuestion.item.text, transcript);
 
         console.log("[Quiz Speech] result:", transcript);
         showSpeakingTranscript(transcript, comparison, isMatch);

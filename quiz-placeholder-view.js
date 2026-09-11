@@ -176,9 +176,7 @@ const QuizPlaceholderView = (function () {
     mainEl.appendChild(viewEl);
 
     listenBtn.addEventListener("click", function () {
-      if (currentIndex >= quizQuestions.length) {
-        speakText("잘했어!");
-      } else if (currentQuestion && currentQuestion.questionType === "listening") {
+      if (currentQuestion && currentQuestion.questionType === "listening") {
         speakText(currentQuestion.item.text);
       }
     });
@@ -200,7 +198,7 @@ const QuizPlaceholderView = (function () {
     });
 
     nextBtn.addEventListener("click", function () {
-      if (nextBtn.disabled || currentIndex >= quizQuestions.length) {
+      if (nextBtn.disabled || currentIndex >= quizQuestions.length - 1) {
         return;
       }
 
@@ -469,53 +467,6 @@ const QuizPlaceholderView = (function () {
     choicesEl.style.alignItems = "stretch";
   }
 
-  function renderCompletion() {
-    currentQuestion = null;
-    resultEl.hidden = true;
-    resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
-    choicesEl.innerHTML = "";
-
-    messageEl.textContent = "잘했어!";
-    messageEl.style.fontSize = "2.25rem";
-    messageEl.style.fontWeight = "700";
-
-    choicesEl.style.flexDirection = "column";
-    choicesEl.style.alignItems = "center";
-
-    const english = document.createElement("p");
-    english.textContent = "Good job!";
-    english.style.fontSize = "1rem";
-    english.style.fontWeight = "600";
-    english.style.color = "var(--color-text-muted)";
-    english.style.margin = "0";
-
-    const image = document.createElement("img");
-    image.src = "assets/images/good job.png";
-    image.alt = "Celebration fireworks";
-    image.style.width = "320px";
-    image.style.maxWidth = "100%";
-    image.style.height = "240px";
-    image.style.objectFit = "contain";
-
-    choicesEl.appendChild(english);
-    choicesEl.appendChild(image);
-
-    listenBtn.hidden = false;
-    listenBtn.disabled = !("speechSynthesis" in window);
-    speakBtn.hidden = true;
-    helpListenBtn.hidden = true;
-
-    prevBtn.hidden = false;
-    prevBtn.disabled = false;
-    prevBtn.setAttribute("aria-label", "Return to last quiz question");
-    nextBtn.hidden = true;
-    nextBtn.disabled = true;
-
-    renderProgress();
-  }
-
   function renderListeningQuestion(question) {
     resetQuestionLayout();
     messageEl.textContent = "Listen and choose the matching picture.";
@@ -669,11 +620,8 @@ const QuizPlaceholderView = (function () {
     prevBtn.disabled = isFirst;
     prevBtn.setAttribute("aria-label", "Previous quiz question");
 
-    nextBtn.hidden = false;
-    nextBtn.setAttribute(
-      "aria-label",
-      isLast ? "Finish quiz" : "Next quiz question"
-    );
+    nextBtn.hidden = isLast;
+    nextBtn.setAttribute("aria-label", "Next quiz question");
   }
 
   function renderCurrentQuestion() {
@@ -683,11 +631,6 @@ const QuizPlaceholderView = (function () {
       } catch (error) {
         // Recognition may already be inactive.
       }
-    }
-
-    if (quizQuestions.length > 0 && currentIndex >= quizQuestions.length) {
-      renderCompletion();
-      return;
     }
 
     currentQuestion = quizQuestions[currentIndex] || null;

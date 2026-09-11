@@ -1,16 +1,16 @@
 /**
  * Study position indicator
  * ------------------------
- * Shows the current card position within the selected week's study items.
- * This is navigation only; it does not represent saved completion progress.
+ * Shows the current card position and practice status for each item.
  */
 
 const StudyPosition = (function () {
   let rowEl = null;
-  let fillEl = null;
+  let trackEl = null;
   let countEl = null;
   let current = 0;
   let total = 0;
+  let statuses = [];
 
   function getNextButton() {
     return document.querySelector('.study-arrow[aria-label="Next item"]');
@@ -26,12 +26,8 @@ const StudyPosition = (function () {
     rowEl = document.createElement("div");
     rowEl.className = "study-position";
 
-    const trackEl = document.createElement("div");
-    trackEl.className = "study-position__track";
-
-    fillEl = document.createElement("div");
-    fillEl.className = "study-position__fill";
-    trackEl.appendChild(fillEl);
+    trackEl = document.createElement("div");
+    trackEl.className = "study-position__track study-position__track--segmented";
 
     countEl = document.createElement("span");
     countEl.className = "study-position__count";
@@ -60,6 +56,16 @@ const StudyPosition = (function () {
     });
   }
 
+  function renderSegments() {
+    trackEl.innerHTML = "";
+
+    statuses.forEach(function (status) {
+      const segment = document.createElement("span");
+      segment.className = "study-position__segment study-position__segment--" + status;
+      trackEl.appendChild(segment);
+    });
+  }
+
   function renderPositionOnly() {
     ensureElements();
 
@@ -69,7 +75,7 @@ const StudyPosition = (function () {
     }
 
     rowEl.hidden = false;
-    fillEl.style.width = ((current / total) * 100) + "%";
+    renderSegments();
     countEl.textContent = current + " / " + total;
   }
 
@@ -86,9 +92,24 @@ const StudyPosition = (function () {
     nextBtn.hidden = current === total;
   }
 
+  function markAttempt(index, isCorrect) {
+    if (index < 0 || index >= statuses.length) {
+      return;
+    }
+
+    if (isCorrect) {
+      statuses[index] = "correct";
+    } else if (statuses[index] !== "correct") {
+      statuses[index] = "attempted";
+    }
+
+    renderPositionOnly();
+  }
+
   function show(itemCount) {
     total = Number(itemCount) || 0;
     current = total > 0 ? 1 : 0;
+    statuses = Array(total).fill("unattempted");
     render();
   }
 
@@ -98,5 +119,5 @@ const StudyPosition = (function () {
     }
   }
 
-  return { show, hide };
+  return { show, hide, markAttempt };
 })();

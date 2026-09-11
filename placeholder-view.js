@@ -216,6 +216,8 @@ const PlaceholderView = (function () {
     const comparison = compareTargetToHeard(target, heard);
     const isMatch = SpeechMatch.isMatch(items[currentIndex].text, transcript);
 
+    StudyPosition.markAttempt(currentIndex, isMatch);
+
     resultEl.innerHTML = "";
     resultEl.hidden = false;
     resultEl.classList.toggle("is-match", isMatch);

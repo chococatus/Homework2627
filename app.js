@@ -112,6 +112,29 @@ async function navigateToQuiz(homework) {
   QuizPlaceholderView.show(homework, quizItems);
 }
 
+function saveQuizProgressFromView(homework) {
+  const segments = Array.from(
+    document.querySelectorAll("#quiz-placeholder-view .study-position__segment")
+  );
+
+  if (!homework || segments.length === 0) {
+    return;
+  }
+
+  const allCorrect = segments.every(function (segment) {
+    return segment.classList.contains("study-position__segment--correct");
+  });
+  const allAttempted = segments.every(function (segment) {
+    return !segment.classList.contains("study-position__segment--unattempted");
+  });
+
+  if (allCorrect) {
+    saveActivityProgress(homework.week, "quiz", "correct");
+  } else if (allAttempted) {
+    saveActivityProgress(homework.week, "quiz", "attempted");
+  }
+}
+
 function navigateToSavedHome() {
   const savedName = getSavedStudentName();
 
@@ -139,6 +162,7 @@ StoryView.init(function (homework) {
 });
 
 QuizPlaceholderView.init(function (homework) {
+  saveQuizProgressFromView(homework);
   navigateToWeekSection(homework);
 });
 

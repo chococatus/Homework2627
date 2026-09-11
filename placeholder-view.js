@@ -213,7 +213,7 @@ const PlaceholderView = (function () {
     const heard = normalizeComparisonText(transcript);
     const displayHeard = cleanDisplayTranscript(transcript);
     const comparison = compareTargetToHeard(target, heard);
-    const isMatch = comparison.distance === 0;
+    const isMatch = SpeechMatch.isMatch(items[currentIndex].text, transcript);
 
     resultEl.innerHTML = "";
     resultEl.hidden = false;

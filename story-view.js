@@ -46,6 +46,10 @@ const StoryView = (function () {
       utterance.voice = koreanVoice;
     }
 
+    if (currentHomework) {
+      saveActivityProgress(currentHomework.week, "story", "correct");
+    }
+
     window.speechSynthesis.cancel();
     setTimeout(function () {
       window.speechSynthesis.speak(utterance);

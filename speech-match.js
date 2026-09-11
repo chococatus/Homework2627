@@ -54,7 +54,7 @@ const SpeechMatch = (function () {
       return true;
     }
 
-    const minLength = Math.max(1, targetChars.length - 1);
+    const minLength = targetChars.length;
     const maxLength = targetChars.length + 1;
 
     for (let length = minLength; length <= maxLength; length += 1) {

@@ -24,6 +24,7 @@ const PlaceholderView = (function () {
   let replayBtn = null;
   let resultEl = null;
   let recognition = null;
+  let recognitionActive = false;
   let mediaRecorder = null;
   let recordingStream = null;
   let recordingChunks = [];
@@ -337,7 +338,7 @@ const PlaceholderView = (function () {
   }
 
   async function startSpeechRecognition() {
-    if (items.length === 0) {
+    if (items.length === 0 || recognitionActive) {
       return;
     }
 
@@ -346,6 +347,11 @@ const PlaceholderView = (function () {
     if (!SpeechRecognitionConstructor) {
       console.error("[Speech Recognition] Speech recognition is not supported in this browser.");
       return;
+    }
+
+    recognitionActive = true;
+    if (recognitionBtn) {
+      recognitionBtn.disabled = true;
     }
 
     clearRecognitionResult();
@@ -376,6 +382,7 @@ const PlaceholderView = (function () {
       };
 
       recognition.onend = function () {
+        recognitionActive = false;
         stopTemporaryRecording();
         recognitionBtn.textContent = "🎤 Speak";
         recognitionBtn.disabled = false;
@@ -386,7 +393,10 @@ const PlaceholderView = (function () {
     try {
       recognition.start();
     } catch (error) {
+      recognitionActive = false;
       stopTemporaryRecording();
+      recognitionBtn.textContent = "🎤 Speak";
+      recognitionBtn.disabled = false;
       console.error("[Speech Recognition] could not start:", error);
     }
   }
@@ -525,7 +535,7 @@ const PlaceholderView = (function () {
     speakBtn.hidden = false;
     speakBtn.disabled = !("speechSynthesis" in window);
     recognitionBtn.hidden = false;
-    recognitionBtn.disabled = !getSpeechRecognitionConstructor();
+    recognitionBtn.disabled = recognitionActive || !getSpeechRecognitionConstructor();
   }
 
   function show(homework, weekItems) {

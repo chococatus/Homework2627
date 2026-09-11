@@ -364,6 +364,27 @@ const QuizPlaceholderView = (function () {
     resultEl.hidden = false;
   }
 
+  function showPendingSpeakingTranscript() {
+    speakingResultEl.innerHTML = "";
+    speakingResultEl.hidden = false;
+    speakingResultEl.classList.remove("is-match", "needs-practice");
+
+    const line = document.createElement("p");
+    line.className = "study-result-line";
+
+    const label = document.createElement("span");
+    label.className = "study-result-label";
+    label.textContent = "I heard: ";
+    line.appendChild(label);
+
+    const pending = document.createElement("span");
+    pending.className = "study-result-label";
+    pending.textContent = "…";
+    line.appendChild(pending);
+
+    speakingResultEl.appendChild(line);
+  }
+
   function showSpeakingTranscript(transcript, comparison, isMatch) {
     const displayHeard = cleanDisplayTranscript(transcript);
 
@@ -547,8 +568,7 @@ const QuizPlaceholderView = (function () {
     messageEl.textContent = "Look at the picture and say it.";
     resultEl.hidden = true;
     resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
+    showPendingSpeakingTranscript();
     choicesEl.innerHTML = "";
     choicesEl.appendChild(createQuizCard(question.item));
 
@@ -621,8 +641,7 @@ const QuizPlaceholderView = (function () {
 
     resultEl.hidden = true;
     resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
+    showPendingSpeakingTranscript();
     helpListenBtn.hidden = true;
 
     try {

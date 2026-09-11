@@ -11,6 +11,7 @@ const StudyPosition = (function () {
   let current = 0;
   let total = 0;
   let statuses = [];
+  let currentHomework = null;
 
   function getNextButton() {
     return document.querySelector('.study-arrow[aria-label="Next item"]');
@@ -92,6 +93,25 @@ const StudyPosition = (function () {
     nextBtn.hidden = current === total;
   }
 
+  function saveSpeakingProgress() {
+    if (!currentHomework || statuses.length === 0) {
+      return;
+    }
+
+    const allCorrect = statuses.every(function (status) {
+      return status === "correct";
+    });
+    const allAttempted = statuses.every(function (status) {
+      return status !== "unattempted";
+    });
+
+    if (allCorrect) {
+      saveActivityProgress(currentHomework.week, "speaking", "correct");
+    } else if (allAttempted) {
+      saveActivityProgress(currentHomework.week, "speaking", "attempted");
+    }
+  }
+
   function markAttempt(index, isCorrect) {
     if (index < 0 || index >= statuses.length) {
       return;
@@ -103,13 +123,15 @@ const StudyPosition = (function () {
       statuses[index] = "attempted";
     }
 
+    saveSpeakingProgress();
     renderPositionOnly();
   }
 
-  function show(itemCount) {
+  function show(itemCount, homework) {
     total = Number(itemCount) || 0;
     current = total > 0 ? 1 : 0;
     statuses = Array(total).fill("unattempted");
+    currentHomework = homework || null;
     render();
   }
 

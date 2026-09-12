@@ -170,10 +170,17 @@ function updateQuizCompletionFeedback() {
   }
 
   const status = getQuizProgressStatus();
-  banner.hidden = !status;
+  const shouldHide = !status;
+
+  if (banner.hidden !== shouldHide) {
+    banner.hidden = shouldHide;
+  }
 
   if (status) {
-    banner.textContent = "Good job! " + getProgressStar(status);
+    const message = "Good job! " + getProgressStar(status);
+    if (banner.textContent !== message) {
+      banner.textContent = message;
+    }
   }
 }
 

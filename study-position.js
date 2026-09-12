@@ -8,6 +8,7 @@ const StudyPosition = (function () {
   let rowEl = null;
   let trackEl = null;
   let countEl = null;
+  let completionEl = null;
   let current = 0;
   let total = 0;
   let statuses = [];
@@ -22,7 +23,14 @@ const StudyPosition = (function () {
       return;
     }
 
+    const viewEl = document.getElementById("placeholder-view");
+    const titleEl = viewEl.querySelector(".view-title");
     const backBtn = document.getElementById("placeholder-back-button");
+
+    completionEl = document.createElement("div");
+    completionEl.className = "study-completion-banner";
+    completionEl.hidden = true;
+    titleEl.insertAdjacentElement("beforebegin", completionEl);
 
     rowEl = document.createElement("div");
     rowEl.className = "study-position";
@@ -67,17 +75,47 @@ const StudyPosition = (function () {
     });
   }
 
+  function getCompletionStatus() {
+    if (statuses.length === 0) {
+      return "";
+    }
+
+    const allCorrect = statuses.every(function (status) {
+      return status === "correct";
+    });
+    if (allCorrect) {
+      return "correct";
+    }
+
+    const allAttempted = statuses.every(function (status) {
+      return status !== "unattempted";
+    });
+    return allAttempted ? "attempted" : "";
+  }
+
+  function renderCompletion() {
+    ensureElements();
+    const status = getCompletionStatus();
+
+    completionEl.hidden = !status;
+    if (status) {
+      completionEl.textContent = "Good job! " + getProgressStar(status);
+    }
+  }
+
   function renderPositionOnly() {
     ensureElements();
 
     if (total === 0) {
       rowEl.hidden = true;
+      completionEl.hidden = true;
       return;
     }
 
     rowEl.hidden = false;
     renderSegments();
     countEl.textContent = current + " / " + total;
+    renderCompletion();
   }
 
   function render() {
@@ -98,16 +136,11 @@ const StudyPosition = (function () {
       return;
     }
 
-    const allCorrect = statuses.every(function (status) {
-      return status === "correct";
-    });
-    const allAttempted = statuses.every(function (status) {
-      return status !== "unattempted";
-    });
+    const status = getCompletionStatus();
 
-    if (allCorrect) {
+    if (status === "correct") {
       saveActivityProgress(currentHomework.week, "speaking", "correct");
-    } else if (allAttempted) {
+    } else if (status === "attempted") {
       saveActivityProgress(currentHomework.week, "speaking", "attempted");
     }
   }
@@ -132,12 +165,17 @@ const StudyPosition = (function () {
     current = total > 0 ? 1 : 0;
     statuses = Array(total).fill("unattempted");
     currentHomework = homework || null;
+    ensureElements();
+    completionEl.hidden = true;
     render();
   }
 
   function hide() {
     if (rowEl) {
       rowEl.hidden = true;
+    }
+    if (completionEl) {
+      completionEl.hidden = true;
     }
   }
 

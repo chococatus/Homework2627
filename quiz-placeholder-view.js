@@ -428,6 +428,19 @@ const QuizPlaceholderView = (function () {
     speakingResultEl.appendChild(line);
   }
 
+  function saveCurrentQuizItemStatus() {
+    if (!currentHomework || !currentQuestion || !currentQuestion.item) {
+      return;
+    }
+
+    savePracticeItemStatus(
+      currentHomework.week,
+      "quiz",
+      currentQuestion.item,
+      quizStatuses[currentIndex]
+    );
+  }
+
   function markQuizAttempt(isCorrect) {
     if (currentIndex < 0 || currentIndex >= quizStatuses.length) {
       return;
@@ -439,6 +452,7 @@ const QuizPlaceholderView = (function () {
       quizStatuses[currentIndex] = "attempted";
     }
 
+    saveCurrentQuizItemStatus();
     renderProgress();
   }
 
@@ -518,7 +532,7 @@ const QuizPlaceholderView = (function () {
     listenBtn.disabled = false;
     speakBtn.hidden = true;
     helpListenBtn.hidden = true;
-    nextBtn.disabled = true;
+    nextBtn.disabled = quizStatuses[currentIndex] !== "correct";
 
     const choices = getListeningChoices(question.item, quizItems);
 
@@ -579,7 +593,7 @@ const QuizPlaceholderView = (function () {
     speakBtn.textContent = "🎤 Speak";
     speakBtn.disabled = !getSpeechRecognitionConstructor();
     helpListenBtn.hidden = true;
-    nextBtn.disabled = true;
+    nextBtn.disabled = quizStatuses[currentIndex] !== "correct";
   }
 
   function startSpeakingRecognition() {
@@ -708,7 +722,9 @@ const QuizPlaceholderView = (function () {
     quizItems = items.slice();
     const shuffledItems = shuffleItems(quizItems);
     quizQuestions = assignQuestionTypes(shuffledItems);
-    quizStatuses = Array(quizQuestions.length).fill("unattempted");
+    quizStatuses = quizQuestions.map(function (question) {
+      return getPracticeItemStatus(homework.week, "quiz", question.item);
+    });
     currentIndex = 0;
 
     renderCurrentQuestion();

@@ -100,7 +100,7 @@ async function navigateToSpeaking(homework) {
   speakingViewEl.querySelector(".view-title").textContent =
     "꾀꼬리반 숙제 · Week " + homework.week + " · Speaking";
 
-  StudyPosition.show(speakingItems.length, homework);
+  StudyPosition.show(speakingItems.length, homework, speakingItems);
 }
 
 async function navigateToQuiz(homework) {

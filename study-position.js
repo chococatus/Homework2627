@@ -13,6 +13,7 @@ const StudyPosition = (function () {
   let total = 0;
   let statuses = [];
   let currentHomework = null;
+  let currentItems = [];
 
   function getNextButton() {
     return document.querySelector('.study-arrow[aria-label="Next item"]');
@@ -156,17 +157,38 @@ const StudyPosition = (function () {
       statuses[index] = "attempted";
     }
 
+    if (currentHomework && currentItems[index]) {
+      savePracticeItemStatus(
+        currentHomework.week,
+        "speaking",
+        currentItems[index],
+        statuses[index]
+      );
+    }
+
     saveSpeakingProgress();
     renderPositionOnly();
   }
 
-  function show(itemCount, homework) {
+  function show(itemCount, homework, items) {
     total = Number(itemCount) || 0;
     current = total > 0 ? 1 : 0;
-    statuses = Array(total).fill("unattempted");
     currentHomework = homework || null;
+    currentItems = Array.isArray(items) ? items.slice() : [];
+
+    if (currentHomework && currentItems.length === total) {
+      statuses = getPracticeStatuses(
+        currentHomework.week,
+        "speaking",
+        currentItems
+      );
+    } else {
+      statuses = Array(total).fill("unattempted");
+    }
+
     ensureElements();
     completionEl.hidden = true;
+    saveSpeakingProgress();
     render();
   }
 

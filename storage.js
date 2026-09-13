@@ -8,6 +8,7 @@ const STORAGE_KEY = "kkoekkori-student-name";
 const HOMEWORK_PROGRESS_KEY = "kkoekkori-homework-progress-v1";
 const STORY_LISTENED_KEY = "kkoekkori-story-listened-v1";
 const PRACTICE_ITEM_PROGRESS_KEY = "kkoekkori-practice-item-progress-v1";
+const STUDENT_VARIABLES_KEY = "kkoekkori-student-variables-v1";
 
 function saveStudentName(name) {
   localStorage.setItem(STORAGE_KEY, String(name || "").trim());
@@ -19,6 +20,54 @@ function getSavedStudentName() {
 
 function clearStudentName() {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+function getStudentVariablesStore() {
+  try {
+    const saved = localStorage.getItem(STUDENT_VARIABLES_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.warn("[Student Variables] Could not read saved variables:", error);
+    return {};
+  }
+}
+
+function getStudentVariables() {
+  const studentName = String(getSavedStudentName() || "").trim();
+  const store = getStudentVariablesStore();
+  const savedVariables = store[studentName] || {};
+
+  return Object.assign({}, savedVariables, {
+    name: studentName,
+  });
+}
+
+function saveStudentVariable(key, value) {
+  const studentName = String(getSavedStudentName() || "").trim();
+  const variableKey = String(key || "").trim();
+
+  if (!studentName || !variableKey || variableKey === "name") {
+    return;
+  }
+
+  const store = getStudentVariablesStore();
+  const variables = store[studentName] || {};
+  variables[variableKey] = String(value == null ? "" : value).trim();
+  store[studentName] = variables;
+  localStorage.setItem(STUDENT_VARIABLES_KEY, JSON.stringify(store));
+}
+
+function resolveStudentTemplate(text) {
+  const variables = getStudentVariables();
+
+  return String(text == null ? "" : text).replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, function (match, key) {
+    if (!Object.prototype.hasOwnProperty.call(variables, key)) {
+      return match;
+    }
+
+    const value = String(variables[key] == null ? "" : variables[key]).trim();
+    return value || match;
+  });
 }
 
 function getHomeworkProgressStore() {
@@ -133,7 +182,8 @@ function getPracticeItemKey(item) {
     return "";
   }
 
-  return [item.type || "", item.text || "", item.image || ""].join("|");
+  const stableText = item.templateText || item.text || "";
+  return [item.type || "", stableText, item.image || ""].join("|");
 }
 
 function getPracticeProgressKey(week, activity) {

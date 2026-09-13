@@ -36,17 +36,14 @@ const WeekSectionView = (function () {
     storyButton = document.createElement("button");
     storyButton.type = "button";
     storyButton.className = "btn btn--primary";
-    storyButton.textContent = "📖 이번 주 이야기 듣기";
 
     speakingButton = document.createElement("button");
     speakingButton.type = "button";
     speakingButton.className = "btn btn--primary";
-    speakingButton.textContent = "🎤 말하기 연습";
 
     quizButton = document.createElement("button");
     quizButton.type = "button";
     quizButton.className = "btn btn--primary";
-    quizButton.textContent = "🎯 퀴즈";
 
     backButton = document.createElement("button");
     backButton.type = "button";
@@ -85,10 +82,25 @@ const WeekSectionView = (function () {
     });
   }
 
+  function withStar(label, status) {
+    const star = getProgressStar(status);
+    return star ? label + " " + star : label;
+  }
+
   function show(homework, hasStory) {
     createView();
     currentHomework = homework;
-    titleEl.textContent = "Week " + homework.week;
+
+    const storyStatus = getActivityProgress(homework.week, "story");
+    const speakingStatus = getActivityProgress(homework.week, "speaking");
+    const quizStatus = getActivityProgress(homework.week, "quiz");
+    const weekStatus = getWeekProgressStatus(homework.week, hasStory);
+    const weekStar = getProgressStar(weekStatus);
+
+    titleEl.textContent = "Week " + homework.week + (weekStar ? " " + weekStar : "");
+    storyButton.textContent = withStar("📖 이번 주 이야기 듣기", storyStatus);
+    speakingButton.textContent = withStar("🎤 말하기 연습", speakingStatus);
+    quizButton.textContent = withStar("🎯 퀴즈", quizStatus);
     storyButton.hidden = !hasStory;
     viewEl.hidden = false;
   }

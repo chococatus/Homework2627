@@ -21,7 +21,7 @@ const QuizPlaceholderView = (function () {
   let prevBtn = null;
   let nextBtn = null;
   let progressRowEl = null;
-  let progressFillEl = null;
+  let progressTrackEl = null;
   let progressCountEl = null;
   let backBtn = null;
   let currentHomework = null;
@@ -30,6 +30,7 @@ const QuizPlaceholderView = (function () {
   let currentIndex = 0;
   let quizQuestions = [];
   let quizItems = [];
+  let quizStatuses = [];
   let recognition = null;
   let speakingAttemptStarted = false;
 
@@ -148,12 +149,8 @@ const QuizPlaceholderView = (function () {
     progressRowEl = document.createElement("div");
     progressRowEl.className = "study-position";
 
-    const progressTrackEl = document.createElement("div");
-    progressTrackEl.className = "study-position__track";
-
-    progressFillEl = document.createElement("div");
-    progressFillEl.className = "study-position__fill";
-    progressTrackEl.appendChild(progressFillEl);
+    progressTrackEl = document.createElement("div");
+    progressTrackEl.className = "study-position__track study-position__track--segmented";
 
     progressCountEl = document.createElement("span");
     progressCountEl.className = "study-position__count";
@@ -176,9 +173,7 @@ const QuizPlaceholderView = (function () {
     mainEl.appendChild(viewEl);
 
     listenBtn.addEventListener("click", function () {
-      if (currentIndex >= quizQuestions.length) {
-        speakText("잘했어!");
-      } else if (currentQuestion && currentQuestion.questionType === "listening") {
+      if (currentQuestion && currentQuestion.questionType === "listening") {
         speakText(currentQuestion.item.text);
       }
     });
@@ -200,7 +195,7 @@ const QuizPlaceholderView = (function () {
     });
 
     nextBtn.addEventListener("click", function () {
-      if (nextBtn.disabled || currentIndex >= quizQuestions.length) {
+      if (nextBtn.disabled || currentIndex >= quizQuestions.length - 1) {
         return;
       }
 
@@ -369,6 +364,27 @@ const QuizPlaceholderView = (function () {
     resultEl.hidden = false;
   }
 
+  function showPendingSpeakingTranscript() {
+    speakingResultEl.innerHTML = "";
+    speakingResultEl.hidden = false;
+    speakingResultEl.classList.remove("is-match", "needs-practice");
+
+    const line = document.createElement("p");
+    line.className = "study-result-line";
+
+    const label = document.createElement("span");
+    label.className = "study-result-label";
+    label.textContent = "I heard: ";
+    line.appendChild(label);
+
+    const pending = document.createElement("span");
+    pending.className = "study-result-label";
+    pending.textContent = "…";
+    line.appendChild(pending);
+
+    speakingResultEl.appendChild(line);
+  }
+
   function showSpeakingTranscript(transcript, comparison, isMatch) {
     const displayHeard = cleanDisplayTranscript(transcript);
 
@@ -412,16 +428,50 @@ const QuizPlaceholderView = (function () {
     speakingResultEl.appendChild(line);
   }
 
+  function saveCurrentQuizItemStatus() {
+    if (!currentHomework || !currentQuestion || !currentQuestion.item) {
+      return;
+    }
+
+    savePracticeItemStatus(
+      currentHomework.week,
+      "quiz",
+      currentQuestion.item,
+      quizStatuses[currentIndex]
+    );
+  }
+
+  function markQuizAttempt(isCorrect) {
+    if (currentIndex < 0 || currentIndex >= quizStatuses.length) {
+      return;
+    }
+
+    if (isCorrect) {
+      quizStatuses[currentIndex] = "correct";
+    } else if (quizStatuses[currentIndex] !== "correct") {
+      quizStatuses[currentIndex] = "attempted";
+    }
+
+    saveCurrentQuizItemStatus();
+    renderProgress();
+  }
+
   function renderProgress() {
     if (quizQuestions.length === 0) {
       progressRowEl.hidden = true;
       return;
     }
 
-    const displayIndex = Math.min(currentIndex + 1, quizQuestions.length);
     progressRowEl.hidden = false;
-    progressFillEl.style.width = ((displayIndex / quizQuestions.length) * 100) + "%";
-    progressCountEl.textContent = displayIndex + " / " + quizQuestions.length;
+    progressTrackEl.innerHTML = "";
+
+    quizStatuses.forEach(function (status) {
+      const segment = document.createElement("span");
+      segment.className = "study-position__segment study-position__segment--" + status;
+      progressTrackEl.appendChild(segment);
+    });
+
+    progressCountEl.textContent = (currentIndex + 1) + " / " + quizQuestions.length;
   }
 
   function createQuizCard(item) {
@@ -469,53 +519,6 @@ const QuizPlaceholderView = (function () {
     choicesEl.style.alignItems = "stretch";
   }
 
-  function renderCompletion() {
-    currentQuestion = null;
-    resultEl.hidden = true;
-    resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
-    choicesEl.innerHTML = "";
-
-    messageEl.textContent = "잘했어!";
-    messageEl.style.fontSize = "2.25rem";
-    messageEl.style.fontWeight = "700";
-
-    choicesEl.style.flexDirection = "column";
-    choicesEl.style.alignItems = "center";
-
-    const english = document.createElement("p");
-    english.textContent = "Good job!";
-    english.style.fontSize = "1rem";
-    english.style.fontWeight = "600";
-    english.style.color = "var(--color-text-muted)";
-    english.style.margin = "0";
-
-    const image = document.createElement("img");
-    image.src = "assets/images/good job.png";
-    image.alt = "Celebration fireworks";
-    image.style.width = "320px";
-    image.style.maxWidth = "100%";
-    image.style.height = "240px";
-    image.style.objectFit = "contain";
-
-    choicesEl.appendChild(english);
-    choicesEl.appendChild(image);
-
-    listenBtn.hidden = false;
-    listenBtn.disabled = !("speechSynthesis" in window);
-    speakBtn.hidden = true;
-    helpListenBtn.hidden = true;
-
-    prevBtn.hidden = false;
-    prevBtn.disabled = false;
-    prevBtn.setAttribute("aria-label", "Return to last quiz question");
-    nextBtn.hidden = true;
-    nextBtn.disabled = true;
-
-    renderProgress();
-  }
-
   function renderListeningQuestion(question) {
     resetQuestionLayout();
     messageEl.textContent = "Listen and choose the matching picture.";
@@ -529,7 +532,7 @@ const QuizPlaceholderView = (function () {
     listenBtn.disabled = false;
     speakBtn.hidden = true;
     helpListenBtn.hidden = true;
-    nextBtn.disabled = true;
+    nextBtn.disabled = quizStatuses[currentIndex] !== "correct";
 
     const choices = getListeningChoices(question.item, quizItems);
 
@@ -556,6 +559,8 @@ const QuizPlaceholderView = (function () {
 
       button.addEventListener("click", function () {
         const isCorrect = item === question.item;
+        markQuizAttempt(isCorrect);
+
         if (isCorrect) {
           button.style.border = "3px solid #2e7d32";
           showResult("✓ Correct!", "#2e7d32");
@@ -577,8 +582,7 @@ const QuizPlaceholderView = (function () {
     messageEl.textContent = "Look at the picture and say it.";
     resultEl.hidden = true;
     resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
+    showPendingSpeakingTranscript();
     choicesEl.innerHTML = "";
     choicesEl.appendChild(createQuizCard(question.item));
 
@@ -589,7 +593,7 @@ const QuizPlaceholderView = (function () {
     speakBtn.textContent = "🎤 Speak";
     speakBtn.disabled = !getSpeechRecognitionConstructor();
     helpListenBtn.hidden = true;
-    nextBtn.disabled = true;
+    nextBtn.disabled = quizStatuses[currentIndex] !== "correct";
   }
 
   function startSpeakingRecognition() {
@@ -621,10 +625,11 @@ const QuizPlaceholderView = (function () {
         const target = normalizeComparisonText(currentQuestion.item.text);
         const heard = normalizeComparisonText(transcript);
         const comparison = compareTargetToHeard(target, heard);
-        const isMatch = target.length > 0 && heard.includes(target);
+        const isMatch = SpeechMatch.isMatch(currentQuestion.item.text, transcript);
 
         console.log("[Quiz Speech] result:", transcript);
         showSpeakingTranscript(transcript, comparison, isMatch);
+        markQuizAttempt(isMatch);
 
         if (isMatch) {
           showResult("✓ Correct!", "#2e7d32");
@@ -650,8 +655,7 @@ const QuizPlaceholderView = (function () {
 
     resultEl.hidden = true;
     resultEl.textContent = "";
-    speakingResultEl.hidden = true;
-    speakingResultEl.innerHTML = "";
+    showPendingSpeakingTranscript();
     helpListenBtn.hidden = true;
 
     try {
@@ -669,11 +673,8 @@ const QuizPlaceholderView = (function () {
     prevBtn.disabled = isFirst;
     prevBtn.setAttribute("aria-label", "Previous quiz question");
 
-    nextBtn.hidden = false;
-    nextBtn.setAttribute(
-      "aria-label",
-      isLast ? "Finish quiz" : "Next quiz question"
-    );
+    nextBtn.hidden = isLast;
+    nextBtn.setAttribute("aria-label", "Next quiz question");
   }
 
   function renderCurrentQuestion() {
@@ -683,11 +684,6 @@ const QuizPlaceholderView = (function () {
       } catch (error) {
         // Recognition may already be inactive.
       }
-    }
-
-    if (quizQuestions.length > 0 && currentIndex >= quizQuestions.length) {
-      renderCompletion();
-      return;
     }
 
     currentQuestion = quizQuestions[currentIndex] || null;
@@ -726,6 +722,9 @@ const QuizPlaceholderView = (function () {
     quizItems = items.slice();
     const shuffledItems = shuffleItems(quizItems);
     quizQuestions = assignQuestionTypes(shuffledItems);
+    quizStatuses = quizQuestions.map(function (question) {
+      return getPracticeItemStatus(homework.week, "quiz", question.item);
+    });
     currentIndex = 0;
 
     renderCurrentQuestion();

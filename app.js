@@ -94,9 +94,13 @@ async function navigateToSpeaking(homework) {
 
   hideAllViews();
   PlaceholderView.show(homework, speakingItems);
-  document.querySelector("#placeholder-view .view-title").textContent =
-    "Week " + homework.week + " · Speaking";
-  StudyPosition.show(speakingItems.length);
+
+  const speakingViewEl = document.getElementById("placeholder-view");
+  speakingViewEl.classList.add("study-view");
+  speakingViewEl.querySelector(".view-title").textContent =
+    "꾀꼬리반 숙제 · Week " + homework.week + " · Speaking";
+
+  StudyPosition.show(speakingItems.length, homework, speakingItems);
 }
 
 async function navigateToQuiz(homework) {
@@ -110,6 +114,103 @@ async function navigateToQuiz(homework) {
 
   hideAllViews();
   QuizPlaceholderView.show(homework, quizItems);
+
+  const quizViewEl = document.getElementById("quiz-placeholder-view");
+  quizViewEl.classList.add("study-view");
+  quizViewEl.querySelector(".study-week-label").textContent =
+    "꾀꼬리반 숙제 · Week " + homework.week + " · Quiz";
+}
+
+function getQuizProgressStatus() {
+  const segments = Array.from(
+    document.querySelectorAll("#quiz-placeholder-view .study-position__segment")
+  );
+
+  if (segments.length === 0) {
+    return "";
+  }
+
+  const allCorrect = segments.every(function (segment) {
+    return segment.classList.contains("study-position__segment--correct");
+  });
+  if (allCorrect) {
+    return "correct";
+  }
+
+  const allAttempted = segments.every(function (segment) {
+    return !segment.classList.contains("study-position__segment--unattempted");
+  });
+
+  return allAttempted ? "attempted" : "";
+}
+
+function ensureQuizCompletionBanner() {
+  const quizViewEl = document.getElementById("quiz-placeholder-view");
+  if (!quizViewEl) {
+    return null;
+  }
+
+  let banner = quizViewEl.querySelector(".study-completion-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.className = "study-completion-banner";
+    banner.hidden = true;
+    const title = quizViewEl.querySelector(".study-week-label");
+    title.insertAdjacentElement("beforebegin", banner);
+  }
+
+  return banner;
+}
+
+function updateQuizCompletionFeedback() {
+  const quizViewEl = document.getElementById("quiz-placeholder-view");
+  const banner = ensureQuizCompletionBanner();
+  if (!quizViewEl || !banner || quizViewEl.hidden) {
+    return;
+  }
+
+  const status = getQuizProgressStatus();
+  const shouldHide = !status;
+
+  if (banner.hidden !== shouldHide) {
+    banner.hidden = shouldHide;
+  }
+
+  if (status) {
+    const message = "Good job! " + getProgressStar(status);
+    if (banner.textContent !== message) {
+      banner.textContent = message;
+    }
+  }
+}
+
+function saveQuizProgressFromView(homework) {
+  if (!homework) {
+    return;
+  }
+
+  const status = getQuizProgressStatus();
+  if (status) {
+    saveActivityProgress(homework.week, "quiz", status);
+  }
+}
+
+function setupQuizProgressObserver() {
+  const quizViewEl = document.getElementById("quiz-placeholder-view");
+  if (!quizViewEl || !("MutationObserver" in window)) {
+    return;
+  }
+
+  const observer = new MutationObserver(function () {
+    updateQuizCompletionFeedback();
+  });
+
+  observer.observe(quizViewEl, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ["class", "hidden"],
+  });
 }
 
 function navigateToSavedHome() {
@@ -139,6 +240,7 @@ StoryView.init(function (homework) {
 });
 
 QuizPlaceholderView.init(function (homework) {
+  saveQuizProgressFromView(homework);
   navigateToWeekSection(homework);
 });
 
@@ -153,6 +255,7 @@ function init() {
   const savedName = getSavedStudentName();
 
   hideAllViews();
+  setupQuizProgressObserver();
 
   if (savedName) {
     navigateToWelcome(savedName);

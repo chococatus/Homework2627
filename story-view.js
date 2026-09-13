@@ -8,15 +8,20 @@ const StoryView = (function () {
   const mainEl = document.querySelector(".page");
 
   let viewEl = null;
+  let completionEl = null;
   let titleEl = null;
   let imageEl = null;
   let textEl = null;
   let prevBtn = null;
   let nextBtn = null;
   let listenBtn = null;
+  let progressRowEl = null;
+  let progressTrackEl = null;
+  let progressCountEl = null;
   let backBtn = null;
 
   let items = [];
+  let listenedStatuses = [];
   let currentIndex = 0;
   let currentHomework = null;
   let onBackCallback = null;
@@ -32,10 +37,63 @@ const StoryView = (function () {
     }) || null;
   }
 
+  function renderProgress() {
+    if (!progressRowEl) {
+      return;
+    }
+
+    if (items.length === 0) {
+      progressRowEl.hidden = true;
+      completionEl.hidden = true;
+      return;
+    }
+
+    progressRowEl.hidden = false;
+    progressTrackEl.innerHTML = "";
+
+    listenedStatuses.forEach(function (status) {
+      const segment = document.createElement("span");
+      segment.className = "study-position__segment study-position__segment--" + status;
+      progressTrackEl.appendChild(segment);
+    });
+
+    progressCountEl.textContent = (currentIndex + 1) + " / " + items.length;
+
+    const allListened = listenedStatuses.every(function (status) {
+      return status === "correct";
+    });
+
+    completionEl.hidden = !allListened;
+    if (allListened) {
+      completionEl.textContent = "Good job! 🌟";
+    }
+  }
+
+  function markCurrentListened() {
+    if (!currentHomework || currentIndex < 0 || currentIndex >= listenedStatuses.length) {
+      return;
+    }
+
+    listenedStatuses[currentIndex] = "correct";
+    saveStoryListenedIndex(currentHomework.week, currentIndex);
+
+    const allListened = listenedStatuses.every(function (status) {
+      return status === "correct";
+    });
+
+    if (allListened) {
+      saveActivityProgress(currentHomework.week, "story", "correct");
+    }
+
+    renderProgress();
+  }
+
   function speakCurrentItem() {
     if (items.length === 0 || !("speechSynthesis" in window)) {
       return;
     }
+
+    markCurrentListened();
 
     const item = items[currentIndex];
     const utterance = new SpeechSynthesisUtterance(item.text);
@@ -59,8 +117,12 @@ const StoryView = (function () {
 
     viewEl = document.createElement("section");
     viewEl.id = "story-view";
-    viewEl.className = "view";
+    viewEl.className = "view study-view";
     viewEl.hidden = true;
+
+    completionEl = document.createElement("div");
+    completionEl.className = "study-completion-banner";
+    completionEl.hidden = true;
 
     titleEl = document.createElement("h1");
     titleEl.className = "study-week-label";
@@ -96,16 +158,29 @@ const StoryView = (function () {
     listenBtn.className = "study-speak-button";
     listenBtn.textContent = "🔊 Listen";
 
+    progressRowEl = document.createElement("div");
+    progressRowEl.className = "study-position story-position";
+
+    progressTrackEl = document.createElement("div");
+    progressTrackEl.className = "study-position__track study-position__track--segmented";
+
+    progressCountEl = document.createElement("span");
+    progressCountEl.className = "study-position__count";
+
+    progressRowEl.appendChild(progressTrackEl);
+    progressRowEl.appendChild(progressCountEl);
+
     backBtn = document.createElement("button");
     backBtn.type = "button";
-    backBtn.className = "btn btn--secondary";
+    backBtn.className = "btn btn--secondary study-nav-button";
     backBtn.textContent = "Back";
-    backBtn.style.marginTop = "1rem";
 
+    viewEl.appendChild(completionEl);
     viewEl.appendChild(titleEl);
     viewEl.appendChild(imageRowEl);
     viewEl.appendChild(textEl);
     viewEl.appendChild(listenBtn);
+    viewEl.appendChild(progressRowEl);
     viewEl.appendChild(backBtn);
     mainEl.appendChild(viewEl);
 
@@ -140,6 +215,7 @@ const StoryView = (function () {
       prevBtn.hidden = true;
       nextBtn.hidden = true;
       listenBtn.hidden = true;
+      renderProgress();
       return;
     }
 
@@ -159,6 +235,7 @@ const StoryView = (function () {
     nextBtn.hidden = currentIndex === items.length - 1;
     listenBtn.hidden = false;
     listenBtn.disabled = !("speechSynthesis" in window);
+    renderProgress();
   }
 
   function show(homework, storyItems) {
@@ -166,7 +243,15 @@ const StoryView = (function () {
     currentHomework = homework;
     items = Array.isArray(storyItems) ? storyItems : [];
     currentIndex = 0;
-    titleEl.textContent = "Week " + homework.week + " · Story";
+
+    const listened = getStoryListenedIndices(homework.week);
+    listenedStatuses = items.map(function (_, index) {
+      return listened.includes(index) ? "correct" : "unattempted";
+    });
+
+    syncStoryCompletion(homework.week, items.length);
+
+    titleEl.textContent = "꾀꼬리반 숙제 · Week " + homework.week + " · Story";
     renderCurrentItem();
     viewEl.hidden = false;
   }

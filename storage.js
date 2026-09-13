@@ -7,6 +7,7 @@
 const STORAGE_KEY = "kkoekkori-student-name";
 const HOMEWORK_PROGRESS_KEY = "kkoekkori-homework-progress-v1";
 const STORY_LISTENED_KEY = "kkoekkori-story-listened-v1";
+const PRACTICE_ITEM_PROGRESS_KEY = "kkoekkori-practice-item-progress-v1";
 
 function saveStudentName(name) {
   localStorage.setItem(STORAGE_KEY, String(name || "").trim());
@@ -115,6 +116,62 @@ function syncStoryCompletion(week, itemCount) {
 
   removeActivityProgress(week, "story");
   return false;
+}
+
+function getPracticeItemProgressStore() {
+  try {
+    const saved = localStorage.getItem(PRACTICE_ITEM_PROGRESS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.warn("[Practice Progress] Could not read saved item progress:", error);
+    return {};
+  }
+}
+
+function getPracticeItemKey(item) {
+  if (!item) {
+    return "";
+  }
+
+  return [item.type || "", item.text || "", item.image || ""].join("|");
+}
+
+function getPracticeProgressKey(week, activity) {
+  const studentName = String(getSavedStudentName() || "").trim();
+  return studentName + "|" + String(week) + "|" + String(activity);
+}
+
+function getPracticeItemStatus(week, activity, item) {
+  const store = getPracticeItemProgressStore();
+  const group = store[getPracticeProgressKey(week, activity)] || {};
+  return group[getPracticeItemKey(item)] || "unattempted";
+}
+
+function getPracticeStatuses(week, activity, items) {
+  return (Array.isArray(items) ? items : []).map(function (item) {
+    return getPracticeItemStatus(week, activity, item);
+  });
+}
+
+function savePracticeItemStatus(week, activity, item, status) {
+  const rank = { unattempted: 0, attempted: 1, correct: 2 };
+  if (!Object.prototype.hasOwnProperty.call(rank, status)) {
+    return;
+  }
+
+  const store = getPracticeItemProgressStore();
+  const groupKey = getPracticeProgressKey(week, activity);
+  const itemKey = getPracticeItemKey(item);
+  const group = store[groupKey] || {};
+  const previous = group[itemKey] || "unattempted";
+
+  if (rank[previous] >= rank[status]) {
+    return;
+  }
+
+  group[itemKey] = status;
+  store[groupKey] = group;
+  localStorage.setItem(PRACTICE_ITEM_PROGRESS_KEY, JSON.stringify(store));
 }
 
 function getProgressStar(status) {

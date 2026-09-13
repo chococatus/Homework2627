@@ -389,8 +389,8 @@ body:has(#quiz-placeholder-view:not([hidden])) .page {
   }
 
   .study-view .study-image-row {
-    grid-template-columns: 36px minmax(0, 1fr) 36px;
-    gap: 0.25rem;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 0.1rem;
   }
 
   .study-view .study-image {
@@ -399,7 +399,7 @@ body:has(#quiz-placeholder-view:not([hidden])) .page {
   }
 
   .study-view .study-arrow {
-    width: 34px;
+    width: 30px;
     height: 42px;
   }
 
@@ -409,8 +409,26 @@ body:has(#quiz-placeholder-view:not([hidden])) .page {
 
   #story-view .story-text {
     min-height: 5em;
+    margin-bottom: 0.45rem;
     font-size: 0.98rem;
-    line-height: 1.25;
+    line-height: 1.32;
+  }
+
+  .study-view .study-position {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 0.4rem;
+  }
+
+  .study-view .study-position__track--segmented {
+    gap: 2px;
+  }
+
+  .study-view .study-nav-button,
+  #story-view .study-nav-button {
+    margin-top: -0.05rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
   }
 
   .study-completion-banner {

@@ -46,14 +46,25 @@ const SpeechMatch = (function () {
       return false;
     }
 
+    // Single-character practice stays forgiving because speech recognition
+    // often adds filler around a short Korean sound.
     if (targetChars.length === 1) {
       return heardChars.includes(targetChars[0]);
     }
 
+    // Exact target anywhere in the recognized phrase is always accepted.
     if (heard.includes(target)) {
       return true;
     }
 
+    // Two-character words are too short for a one-syllable substitution rule:
+    // e.g. 아이 vs 아야 would otherwise count as correct. Require an exact match.
+    if (targetChars.length === 2) {
+      return false;
+    }
+
+    // For 3+ characters, allow one insertion or substitution within a
+    // target-sized fragment, while still rejecting shortened answers.
     const minLength = targetChars.length;
     const maxLength = targetChars.length + 1;
 

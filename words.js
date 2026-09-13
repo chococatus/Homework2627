@@ -44,10 +44,21 @@ async function loadWordsData() {
   return wordsLoadPromise;
 }
 
+function personalizeWordItem(item) {
+  if (!item) {
+    return item;
+  }
+
+  const personalized = Object.assign({}, item);
+  personalized.templateText = item.text || "";
+  personalized.text = resolveStudentTemplate(item.text || "");
+  return personalized;
+}
+
 function getWordsByWeek(week) {
   const numericWeek = Number(week);
 
   return WORDS.filter(function (item) {
     return item && item.week === numericWeek;
-  });
+  }).map(personalizeWordItem);
 }

@@ -5,7 +5,11 @@ async function getHomeworkList() {
   console.log("[Homework Load] started");
 
   try {
-    const response = await fetch("data/homework.json");
+    // Always check the current GitHub Pages JSON. The localStorage cache in
+    // homework.js remains available as a fast fallback while this request runs.
+    const response = await fetch("data/homework.json?ts=" + Date.now(), {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       throw new Error("Failed to load homework data.");

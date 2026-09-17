@@ -14,3 +14,35 @@ async function fetchJson(sheetName) {
 
   return await response.json();
 }
+
+async function saveWeekProgress(student, week, status) {
+  const studentName = String(student || "").trim();
+  const weekId = String(week || "").trim();
+  const star = getProgressStar(status);
+
+  if (!studentName || !weekId || !star) {
+    return;
+  }
+
+  const body = new URLSearchParams();
+  body.set("action", "saveProgress");
+  body.set("student", studentName);
+  body.set("week", weekId);
+  body.set("status", star);
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    body: body,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to save progress.");
+  }
+
+  const result = await response.json();
+  if (!result || result.ok !== true) {
+    throw new Error(result && result.error ? result.error : "Failed to save progress.");
+  }
+
+  return result;
+}

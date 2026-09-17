@@ -87,6 +87,23 @@ const WeekSectionView = (function () {
     return star ? label + " " + star : label;
   }
 
+  function syncCompletedWeek(week, weekStatus) {
+    if (!weekStatus || typeof saveWeekProgress !== "function") {
+      return;
+    }
+
+    const studentName = getSavedStudentName();
+    if (!studentName) {
+      return;
+    }
+
+    // Do not make the child wait for Google Sheets. Local progress remains the
+    // source for the UI; the server write happens quietly in the background.
+    saveWeekProgress(studentName, week, weekStatus).catch(function (error) {
+      console.warn("[Progress Sync] Could not save week progress:", error);
+    });
+  }
+
   function show(homework, hasStory) {
     createView();
     currentHomework = homework;
@@ -103,6 +120,8 @@ const WeekSectionView = (function () {
     quizButton.textContent = withStar("🎯 퀴즈", quizStatus);
     storyButton.hidden = !hasStory;
     viewEl.hidden = false;
+
+    syncCompletedWeek(homework.week, weekStatus);
   }
 
   function hide() {

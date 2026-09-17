@@ -224,9 +224,11 @@ const QuizPlaceholderView = (function () {
   function assignQuestionTypes(items) {
     const listeningCount = Math.round(items.length * 2 / 3);
     return items.map(function (item, index) {
+      const questionType = index < listeningCount ? "listening" : "speaking";
       return {
         item: item,
-        questionType: index < listeningCount ? "listening" : "speaking",
+        questionType: questionType,
+        choices: null,
       };
     });
   }
@@ -534,7 +536,10 @@ const QuizPlaceholderView = (function () {
     helpListenBtn.hidden = true;
     nextBtn.disabled = quizStatuses[currentIndex] !== "correct";
 
-    const choices = getListeningChoices(question.item, quizItems);
+    if (!question.choices) {
+      question.choices = getListeningChoices(question.item, quizItems);
+    }
+    const choices = question.choices;
 
     choices.forEach(function (item) {
       const button = document.createElement("button");
@@ -621,7 +626,10 @@ const QuizPlaceholderView = (function () {
       };
 
       recognition.onresult = function (event) {
-        const transcript = event.results[0][0].transcript;
+        const transcript = Array.from(event.results)
+          .map(function (result) { return result[0].transcript; })
+          .join(" ")
+          .trim();
         const target = normalizeComparisonText(currentQuestion.item.text);
         const heard = normalizeComparisonText(transcript);
         const comparison = compareTargetToHeard(target, heard);

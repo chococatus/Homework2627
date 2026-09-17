@@ -374,7 +374,10 @@ const PlaceholderView = (function () {
       };
 
       recognition.onresult = function (event) {
-        const transcript = event.results[0][0].transcript;
+        const transcript = Array.from(event.results)
+          .map(function (result) { return result[0].transcript; })
+          .join(" ")
+          .trim();
         console.log("[Speech Recognition] result:", transcript);
         renderRecognitionResult(transcript);
       };

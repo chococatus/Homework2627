@@ -23,7 +23,13 @@ const HomeView = (function () {
 
     const title = document.createElement("span");
     title.className = "homework-item__title";
-    title.textContent = homework.title;
+    const weekItems = typeof getWordsByWeek === "function" ? getWordsByWeek(homework.week) : [];
+    const hasStory = weekItems.some(function (wordItem) {
+      return wordItem && wordItem.type === "story";
+    });
+    const weekStatus = getWeekProgressStatus(homework.week, hasStory);
+    const weekStar = getProgressStar(weekStatus);
+    title.textContent = homework.title + (weekStar ? " " + weekStar : "");
 
     item.appendChild(week);
     item.appendChild(title);

@@ -25,6 +25,7 @@ const StoryView = (function () {
   let currentIndex = 0;
   let currentHomework = null;
   let onBackCallback = null;
+  let currentAudio = null;
 
   function getKoreanVoice() {
     if (!("speechSynthesis" in window)) {
@@ -88,14 +89,43 @@ const StoryView = (function () {
     renderProgress();
   }
 
+  function stopCurrentAudio() {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
+  }
+
   function speakCurrentItem() {
-    if (items.length === 0 || !("speechSynthesis" in window)) {
+    if (items.length === 0) {
+      return;
+    }
+
+    const item = items[currentIndex];
+    stopCurrentAudio();
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    if (item.audio) {
+      currentAudio = new Audio("assets/audio/" + item.audio);
+      currentAudio.addEventListener("ended", function () {
+        markCurrentListened();
+        currentAudio = null;
+      }, { once: true });
+      currentAudio.play().catch(function (error) {
+        console.error("[Story Audio] playback failed:", error);
+      });
+      return;
+    }
+
+    if (!("speechSynthesis" in window)) {
       return;
     }
 
     markCurrentListened();
 
-    const item = items[currentIndex];
     const utterance = new SpeechSynthesisUtterance(item.text);
     const koreanVoice = getKoreanVoice();
 
@@ -104,7 +134,6 @@ const StoryView = (function () {
       utterance.voice = koreanVoice;
     }
 
-    window.speechSynthesis.cancel();
     setTimeout(function () {
       window.speechSynthesis.speak(utterance);
     }, 50);
@@ -186,6 +215,8 @@ const StoryView = (function () {
 
     prevBtn.addEventListener("click", function () {
       if (currentIndex > 0) {
+        stopCurrentAudio();
+        window.speechSynthesis && window.speechSynthesis.cancel();
         currentIndex -= 1;
         renderCurrentItem();
       }
@@ -193,6 +224,8 @@ const StoryView = (function () {
 
     nextBtn.addEventListener("click", function () {
       if (currentIndex < items.length - 1) {
+        stopCurrentAudio();
+        window.speechSynthesis && window.speechSynthesis.cancel();
         currentIndex += 1;
         renderCurrentItem();
       }
@@ -201,6 +234,7 @@ const StoryView = (function () {
     listenBtn.addEventListener("click", speakCurrentItem);
 
     backBtn.addEventListener("click", function () {
+      stopCurrentAudio();
       window.speechSynthesis && window.speechSynthesis.cancel();
       if (onBackCallback && currentHomework) {
         onBackCallback(currentHomework);
@@ -234,7 +268,7 @@ const StoryView = (function () {
     prevBtn.hidden = currentIndex === 0;
     nextBtn.hidden = currentIndex === items.length - 1;
     listenBtn.hidden = false;
-    listenBtn.disabled = !("speechSynthesis" in window);
+    listenBtn.disabled = !item.audio && !("speechSynthesis" in window);
     renderProgress();
   }
 
@@ -260,6 +294,7 @@ const StoryView = (function () {
     if (viewEl) {
       viewEl.hidden = true;
     }
+    stopCurrentAudio();
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
